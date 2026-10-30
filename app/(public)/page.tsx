@@ -6,7 +6,9 @@ type Props = {}
 export default function page({ }: Props) {
   return (
     <>
-      < Link href="/login">Login</Link>
+      < Link href="/login">Login</Link >
+      <br />
+
       <Link href="/register">Register</Link>
     </>
   )

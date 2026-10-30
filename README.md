@@ -11,3 +11,7 @@ services // xử lí api
 stores // quản lý Trạng thái toàn cục
 types // định nghĩa kiểu dữ liệu
 utils // logic tái sử dụng 
+
+
+lucide react: thư viện icon
+shadcn : compponent mẫu
