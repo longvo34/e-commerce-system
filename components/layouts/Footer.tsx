@@ -1,5 +1,5 @@
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  // const currentYear = new Date().getFullYear();
 
   return (
     <footer className="w-full bg-black text-white py-6">
@@ -8,7 +8,7 @@ export default function Footer() {
           ABC
         </span>
         <p className="text-sm text-neutral-400">
-          © {currentYear} ABC. All rights reserved.
+          © 2026 ABC. All rights reserved.
         </p>
       </div>
     </footer>
