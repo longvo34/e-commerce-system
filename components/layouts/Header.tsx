@@ -21,14 +21,14 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-neutral-100 shadow-xs">
+    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xs border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link
               href="/"
-              className="text-2xl font-extrabold tracking-tight text-neutral-900 hover:opacity-90 transition-opacity"
+              className="text-2xl font-extrabold tracking-tight text-foreground hover:opacity-90 transition-opacity"
             >
               ABC
             </Link>
@@ -46,7 +46,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
                     setIsSearchOpen((prev) => !prev);
                   }
                 }}
-                className="text-sm font-medium text-neutral-700 hover:text-black transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {item.label}
               </Link>
@@ -60,7 +60,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               type="button"
               onClick={() => setIsSearchOpen((prev) => !prev)}
               aria-label="Tìm kiếm"
-              className="w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200/80 flex items-center justify-center text-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400"
+              className="w-10 h-10 rounded-full bg-secondary hover:bg-accent text-secondary-foreground hover:text-accent-foreground flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <Search className="w-5 h-5 stroke-[1.75]" />
             </button>
@@ -69,7 +69,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
             <Link
               href="/profile"
               aria-label="Tài khoản"
-              className="w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200/80 flex items-center justify-center text-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400"
+              className="w-10 h-10 rounded-full bg-secondary hover:bg-accent text-secondary-foreground hover:text-accent-foreground flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <User className="w-5 h-5 stroke-[1.75]" />
             </Link>
@@ -78,11 +78,11 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
             <Link
               href="/cart"
               aria-label="Giỏ hàng"
-              className="relative w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200/80 flex items-center justify-center text-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400"
+              className="relative w-10 h-10 rounded-full bg-secondary hover:bg-accent text-secondary-foreground hover:text-accent-foreground flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <ShoppingBag className="w-5 h-5 stroke-[1.75]" />
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
                   {cartItemCount > 99 ? "99+" : cartItemCount}
                 </span>
               )}
@@ -93,7 +93,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               type="button"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
               aria-label="Toggle menu"
-              className="md:hidden ml-1 p-2 rounded-lg text-neutral-700 hover:bg-neutral-100 focus:outline-none"
+              className="md:hidden ml-1 p-2 rounded-lg text-muted-foreground hover:bg-muted focus:outline-none"
             >
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -106,7 +106,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
 
         {/* Expandable Search Bar */}
         {isSearchOpen && (
-          <div className="py-3 pb-4 border-t border-neutral-100 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="py-3 pb-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -122,9 +122,9 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm kiếm sản phẩm, thương hiệu..."
                 autoFocus
-                className="w-full pl-11 pr-4 py-2.5 bg-neutral-100 rounded-full text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-black transition-all"
+                className="w-full pl-11 pr-4 py-2.5 bg-muted rounded-full text-sm text-foreground placeholder:text-muted-foreground border border-border focus:outline-none focus:bg-background focus:ring-2 focus:ring-ring transition-all"
               />
-              <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2" />
             </form>
           </div>
         )}
@@ -132,7 +132,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
 
       {/* Mobile Dropdown Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-neutral-100 bg-white px-4 pt-3 pb-6 space-y-2">
+        <div className="md:hidden border-t border-border bg-background px-4 pt-3 pb-6 space-y-2">
           {navLinks.map((item) => (
             <Link
               key={item.label}
@@ -143,7 +143,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
                   setIsSearchOpen(true);
                 }
               }}
-              className="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:bg-neutral-100 hover:text-black transition-colors"
+              className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             >
               {item.label}
             </Link>
@@ -153,4 +153,3 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
     </header>
   );
 }
-
