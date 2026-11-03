@@ -179,12 +179,12 @@ export default function ProductDetailPage() {
                                     <ShoppingBag className="w-4 h-4" />
                                     <span>+ Thêm vào giỏ</span>
                                 </Link>
-                                <button
-                                    type="button"
-                                    className="w-full rounded-xl border border-foreground bg-background text-foreground hover:bg-muted py-3.5 text-sm font-semibold text-center transition-colors"
+                                <Link
+                                    href="/profile-confirmation"
+                                    className="block w-full rounded-xl border border-foreground bg-background text-foreground hover:bg-muted py-3.5 text-sm font-semibold text-center transition-colors"
                                 >
                                     Mua
-                                </button>
+                                </Link>
                             </div>
 
                             <div className="grid grid-cols-3 gap-3">

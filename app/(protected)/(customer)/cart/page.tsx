@@ -157,7 +157,7 @@ export default function CartPage() {
 
               <div>
                 <Link
-                  href="/shipping"
+                  href="/profile-confirmation"
                   className="inline-block rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs text-center min-w-[8rem]"
                 >
                   Thanh toán
