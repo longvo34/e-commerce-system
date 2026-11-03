@@ -44,14 +44,14 @@ export default function ProductDetailPage() {
                     <span className="text-foreground font-medium">Chi tiết sản phẩm</span>
                 </nav>
 
-                {/* 2. Top Product View: Gallery & Options (Image 1) */}
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 mb-16">
-                    {/* Left: Product Images Gallery */}
+
                     <div>
-                        {/* Main Image Placeholder */}
+
                         <div className="aspect-square w-full rounded-2xl bg-muted border border-border/40" />
 
-                        {/* 4 Thumbnails */}
+
                         <div className="grid grid-cols-4 gap-3 mt-4">
                             {Array.from({ length: 4 }, (_, idx) => (
                                 <button
@@ -67,18 +67,18 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
 
-                    {/* Right: Product Selection & Actions */}
+
                     <div className="flex flex-col justify-between">
                         <div>
-                            {/* Top Right Badges / Placeholders */}
+
                             <div className="flex items-center gap-2 justify-end mb-6">
                                 <div className="w-14 h-6 rounded-full bg-muted" />
                                 <div className="w-20 h-6 rounded-full bg-muted" />
                             </div>
 
-                            {/* Variant / Option Container */}
+
                             <div className="rounded-2xl border border-border bg-card p-4 space-y-3 mb-6">
-                                {/* Variant 1 */}
+
                                 <div
                                     onClick={() => setSelectedVariant(1)}
                                     className={`rounded-xl border p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${selectedVariant === 1
@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
                                     </span>
                                 </div>
 
-                                {/* Variant 2 (Active in mock) */}
+
                                 <div
                                     onClick={() => setSelectedVariant(2)}
                                     className={`rounded-xl border p-3.5 cursor-pointer transition-colors ${selectedVariant === 2
@@ -126,14 +126,14 @@ export default function ProductDetailPage() {
                                             </span>
                                         </div>
 
-                                        {/* Small Pill Dropdown */}
+
                                         <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
                                             <span className="w-6 h-2 rounded-full bg-muted inline-block" />
                                             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                                         </div>
                                     </div>
 
-                                    {/* Detail link */}
+
                                     <div className="mt-4 pt-3 border-t border-border/40">
                                         <button
                                             type="button"
@@ -146,7 +146,6 @@ export default function ProductDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Quantity Stepper */}
                             <div className="mb-6">
                                 <label className="block text-xs font-semibold text-foreground mb-2">
                                     Số lượng
@@ -172,7 +171,6 @@ export default function ProductDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
                             <div className="space-y-3 mb-6">
                                 <Link
                                     href="/cart"
@@ -189,7 +187,6 @@ export default function ProductDetailPage() {
                                 </button>
                             </div>
 
-                            {/* 3 Small Feature Cards */}
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="aspect-[4/3] rounded-2xl bg-muted" />
                                 <div className="aspect-[4/3] rounded-2xl bg-muted" />
@@ -199,7 +196,6 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
 
-                {/* 3. Product Details Section (Image 2) */}
                 <div className="mb-16">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
@@ -209,7 +205,6 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Description Card (2 cols on lg) */}
                         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 min-h-[220px] flex flex-col justify-between">
                             <div>
                                 <h3 className="text-base font-bold text-foreground mb-4">
@@ -221,7 +216,6 @@ export default function ProductDetailPage() {
                             </div>
                         </div>
 
-                        {/* Specifications Card (1 col on lg) */}
                         <div className="rounded-2xl border border-border bg-card p-6 min-h-[220px]">
                             <h3 className="text-base font-bold text-foreground mb-6">
                                 Thông số kỹ thuật
@@ -234,7 +228,6 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
 
-                {/* 4. Related Products Section: Có thể bạn quan tâm (Image 2) */}
                 <div>
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
@@ -249,7 +242,6 @@ export default function ProductDetailPage() {
                         </button>
                     </div>
 
-                    {/* 4 Related Product Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {relatedProducts.map((item) => (
                             <div
