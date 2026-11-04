@@ -1,0 +1,4 @@
+export default function OrderConfirmationPage() {
+  return <div>Order Confirmation</div>;
+}
+
