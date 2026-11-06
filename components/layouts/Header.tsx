@@ -1,17 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, User, ShoppingBag, Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, User, ShoppingBag, Menu, X, LogOut } from "lucide-react";
 
 interface HeaderProps {
   cartItemCount?: number;
 }
 
 export default function Header({ cartItemCount = 0 }: HeaderProps) {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const navLinks = [
     { label: "Tìm kiếm", href: "/products", isSearchTrigger: true },
@@ -20,11 +41,15 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
     { label: "Hỗ trợ", href: "/support" },
   ];
 
+  const handleLogout = () => {
+    setIsProfileMenuOpen(false);
+    router.push("/login");
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xs border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <Link
               href="/"
@@ -34,7 +59,6 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-8 lg:gap-10">
             {navLinks.map((item) => (
               <Link
@@ -65,14 +89,43 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               <Search className="w-5 h-5 stroke-[1.75]" />
             </button>
 
-            {/* User Profile / Account Button */}
-            <Link
-              href="/profile"
-              aria-label="Tài khoản"
-              className="w-10 h-10 rounded-full bg-secondary hover:bg-accent text-secondary-foreground hover:text-accent-foreground flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <User className="w-5 h-5 stroke-[1.75]" />
-            </Link>
+            {/* User Profile Dropdown Button */}
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                aria-label="Tài khoản"
+                aria-expanded={isProfileMenuOpen}
+                className="w-10 h-10 rounded-full bg-secondary hover:bg-accent text-secondary-foreground hover:text-accent-foreground flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <User className="w-5 h-5 stroke-[1.75]" />
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-popover text-popover-foreground shadow-lg py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span>Hồ sơ của tôi</span>
+                  </Link>
+
+                  <div className="my-1 border-t border-border" />
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Cart Button */}
             <Link
@@ -148,6 +201,25 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               {item.label}
             </Link>
           ))}
+          <div className="pt-2 border-t border-border">
+            <Link
+              href="/profile"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            >
+              Hồ sơ của tôi
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push("/login");
+              }}
+              className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              Đăng xuất
+            </button>
+          </div>
         </div>
       )}
     </header>
