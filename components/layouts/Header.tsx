@@ -113,6 +113,15 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
                     <span>Hồ sơ của tôi</span>
                   </Link>
 
+                  <Link
+                    href="/orders"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span>Đơn hàng của tôi</span>
+                  </Link>
+
                   <div className="my-1 border-t border-border" />
 
                   <button
