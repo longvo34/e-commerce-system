@@ -2,26 +2,33 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { register } from "@/services/auth";
 
 export default function Register() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setMessage("");
 
     const formData = new FormData(e.currentTarget);
-
+    const fullName = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const phoneNumber = String(formData.get("phone") ?? "").trim();
+    const address = String(formData.get("address") ?? "").trim();
     const password = String(formData.get("password") ?? "");
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-    if (password.length < 8) {
-      setError("Mật khẩu phải có ít nhất 8 ký tự.");
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
       return;
     }
 
@@ -30,7 +37,26 @@ export default function Register() {
       return;
     }
 
-    setMessage("Thông tin hợp lệ. Chức năng đăng ký chưa kết nối backend.");
+    try {
+      setLoading(true);
+      await register({
+        fullName,
+        email,
+        phoneNumber,
+        password,
+        address,
+      });
+
+      setMessage("Đăng ký thành công! Đang chuyển đến trang đăng nhập...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Đăng ký thất bại. Vui lòng thử lại!";
+      setError(errMsg);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const inputClass =
@@ -56,9 +82,10 @@ export default function Register() {
               id="name"
               name="name"
               type="text"
-              placeholder="Nguyễn Văn A"
+              placeholder="Nhập tên của bạn"
               autoComplete="name"
               required
+              onChange={() => setError("")}
               className={inputClass}
             />
           </div>
@@ -71,9 +98,10 @@ export default function Register() {
               id="email"
               name="email"
               type="email"
-              placeholder="example@email.com"
+              placeholder="Nhập email của bạn"
               autoComplete="email"
               required
+              onChange={() => setError("")}
               className={inputClass}
             />
           </div>
@@ -86,8 +114,29 @@ export default function Register() {
               id="phone"
               name="phone"
               type="tel"
-              placeholder="Nhập số điện thoại"
+              inputMode="numeric"
+              maxLength={11}
+              placeholder="Nhập số điện thoại "
               autoComplete="tel"
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "");
+              }}
+              onChange={() => setError("")}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="address" className="mb-2 block text-sm font-medium">
+              Địa chỉ
+            </label>
+            <input
+              id="address"
+              name="address"
+              type="text"
+              placeholder="Nhập địa chỉ của bạn"
+              autoComplete="street-address"
+              onChange={() => setError("")}
               className={inputClass}
             />
           </div>
@@ -104,10 +153,11 @@ export default function Register() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Tối thiểu 8 ký tự"
+                placeholder="Tối thiểu 6 ký tự"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={6}
                 required
+                onChange={() => setError("")}
                 className={`${inputClass} pr-12`}
               />
 
@@ -138,6 +188,7 @@ export default function Register() {
                 placeholder="Nhập lại mật khẩu"
                 autoComplete="new-password"
                 required
+                onChange={() => setError("")}
                 className={`${inputClass} pr-12`}
               />
 
@@ -157,22 +208,23 @@ export default function Register() {
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-center text-sm text-destructive">
               {error}
             </p>
           )}
 
           {message && (
-            <p role="status" className="text-sm text-muted-foreground">
+            <p role="status" className="text-center text-sm text-green-600 dark:text-green-400">
               {message}
             </p>
           )}
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            disabled={loading}
+            className="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            Đăng ký
+            {loading ? "Đang xử lý..." : "Đăng ký"}
           </button>
         </form>
 
