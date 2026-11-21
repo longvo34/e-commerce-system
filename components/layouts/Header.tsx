@@ -43,7 +43,19 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
 
   const handleLogout = () => {
     setIsProfileMenuOpen(false);
+    setIsMobileMenuOpen(false);
+
+    // 1. Xóa Cookie token (cho hết hạn về quá khứ)
+    document.cookie =
+      "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+
+    // 2. Xóa localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+
+    // 3. Chuyển về trang đăng nhập và làm mới dữ liệu
     router.push("/login");
+    router.refresh();
   };
 
   return (
@@ -220,10 +232,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
             </Link>
             <button
               type="button"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                router.push("/login");
-              }}
+              onClick={handleLogout}
               className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
             >
               Đăng xuất
