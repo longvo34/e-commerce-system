@@ -17,8 +17,9 @@ import {
   changePassword,
   parseUserProfile,
   mockProfile,
-  type UserProfile,
 } from "@/services/auth";
+
+import type { UserProfile } from "@/types/auth";
 
 const IS_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_PROFILE === "true";
 
