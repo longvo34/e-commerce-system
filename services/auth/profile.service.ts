@@ -1,21 +1,10 @@
 import api from "../api";
 
-export type UserProfile = {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  address: string;
-};
-
-export type UpdateProfilePayload = Pick<
+import type {
   UserProfile,
-  "fullName" | "phoneNumber" | "address"
->;
-
-export type ChangePasswordPayload = {
-  oldPassword: string;
-  newPassword: string;
-};
+  UpdateProfilePayload,
+  ChangePasswordPayload,
+} from "@/types/auth";
 
 export function getMyProfile(): Promise<unknown> {
   return api.get("/auth/me");

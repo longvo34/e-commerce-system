@@ -11,4 +11,19 @@ export interface LoginPayload {
   password: string;
 }
 
+export type UserProfile = {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+};
 
+export type UpdateProfilePayload = Pick<
+  UserProfile,
+  "fullName" | "phoneNumber" | "address"
+>;
+
+export type ChangePasswordPayload = {
+  oldPassword: string;
+  newPassword: string;
+};
