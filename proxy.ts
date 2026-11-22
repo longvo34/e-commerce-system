@@ -5,7 +5,6 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("accessToken")?.value;
   const { pathname } = request.nextUrl;
 
-  // 1. Các trang bắt buộc phải đăng nhập (protected)
   const isProtectedRoute =
     pathname.startsWith("/cart") ||
     pathname.startsWith("/profile") ||
@@ -21,7 +20,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 2. Nếu ĐÃ đăng nhập rồi mà vào lại trang /login hoặc /register thì chuyển về trang chủ
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   if (isAuthRoute && token) {
     return NextResponse.redirect(new URL("/", request.url));
