@@ -1,17 +1,25 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
+export async function apiFetch<T = any>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
   // Tự động lấy token nếu người dùng đã đăng nhập
   const token =
     typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+
+  const headers: Record<string, string> = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string>),
+  };
+
   const res = await fetch(`${API_URL}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
     ...options,
+    headers,
   });
 
   if (!res.ok) {
@@ -20,33 +28,47 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   }
 
   const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  return (text ? JSON.parse(text) : null) as T;
 }
 
 export const api = {
-  get: (endpoint: string) => apiFetch(endpoint),
+  get: <T = any>(endpoint: string, options?: RequestInit) =>
+    apiFetch<T>(endpoint, { method: "GET", ...options }),
 
-  post: (endpoint: string, data: unknown) =>
-    apiFetch(endpoint, {
+  post: <T = any>(endpoint: string, data?: unknown, options?: RequestInit) => {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+    return apiFetch<T>(endpoint, {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      body: isFormData ? data : JSON.stringify(data),
+      ...options,
+    });
+  },
 
-  put: (endpoint: string, data: unknown) =>
-    apiFetch(endpoint, {
+  put: <T = any>(endpoint: string, data?: unknown, options?: RequestInit) => {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+    return apiFetch<T>(endpoint, {
       method: "PUT",
-      body: JSON.stringify(data),
-    }),
+      body: isFormData ? data : JSON.stringify(data),
+      ...options,
+    });
+  },
 
-  patch: (endpoint: string, data: unknown) =>
-    apiFetch(endpoint, {
+  patch: <T = any>(endpoint: string, data?: unknown, options?: RequestInit) => {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+    return apiFetch<T>(endpoint, {
       method: "PATCH",
-      body: JSON.stringify(data),
-    }),
+      body: isFormData ? data : JSON.stringify(data),
+      ...options,
+    });
+  },
 
-  delete: (endpoint: string) =>
-    apiFetch(endpoint, {
+  delete: <T = any>(endpoint: string, options?: RequestInit) =>
+    apiFetch<T>(endpoint, {
       method: "DELETE",
+      ...options,
     }),
 };
 

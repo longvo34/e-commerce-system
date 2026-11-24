@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import ReportsOverview from "./ReportsOverview";
+import ProductsManagementPanel from "./ProductsManagementPanel";
 import {
   LayoutDashboard,
   Package,
@@ -89,7 +91,7 @@ export default function DashboardShell({
         key: "products" as TabKey,
         label: "Sản phẩm & SKU",
         icon: Package,
-        roles: ["admin", "product_staff"],
+        roles: ["admin", "product_staff",],
       },
       {
         key: "categories" as TabKey,
@@ -174,11 +176,10 @@ export default function DashboardShell({
                 key={item.key}
                 type="button"
                 onClick={() => setActiveTab(item.key)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
-                  isActive
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${isActive
                     ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 <span>{item.label}</span>
@@ -241,11 +242,10 @@ export default function DashboardShell({
                       setActiveTab(item.key);
                       setIsMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium ${
-                      isActive
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium ${isActive
                         ? "bg-primary text-primary-foreground font-semibold"
                         : "text-muted-foreground hover:bg-muted"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
@@ -291,7 +291,7 @@ export default function DashboardShell({
 
         {/* Dynamic Tab Content Renderer */}
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
-          {activeTab === "overview" && <OverviewPanel role={role} />}
+          {activeTab === "overview" && <ReportsOverview role={role} />}
           {activeTab === "products" && <ProductsManagementPanel />}
           {activeTab === "categories" && <CategoriesManagementPanel />}
           {activeTab === "inventory" && <InventoryManagementPanel />}
@@ -306,159 +306,9 @@ export default function DashboardShell({
   );
 }
 
-// =========================================================================
-// 1. TỔNG QUAN (Phân biệt theo Role)
-// =========================================================================
-function OverviewPanel({ role }: { role: RoleType }) {
-  const metrics = useMemo(() => {
-    if (role === "product_staff") {
-      return [
-        { title: "Tổng sản phẩm quản lý", value: "148 SP", change: "+12 SP mới", isPositive: true },
-        { title: "Đang kinh doanh", value: "135 SP", change: "Hoạt động tốt", isPositive: true },
-        { title: "Ngừng kinh doanh an toàn", value: "13 SP", change: "Lưu lịch sử", isPositive: true },
-        { title: "Danh mục sản phẩm", value: "8 danh mục", change: "Chuẩn cây DM", isPositive: true },
-      ];
-    }
-    if (role === "inventory_staff") {
-      return [
-        { title: "Đơn hàng chờ tiếp nhận", value: "24 đơn", change: "Cần xử lý gấp", isPositive: false },
-        { title: "Đang chuẩn bị & đóng gói", value: "38 đơn", change: "+8 đơn", isPositive: true },
-        { title: "Đang giao vận", value: "65 đơn", change: "Đang trên đường", isPositive: true },
-        { title: "Cảnh báo tồn kho thấp", value: "14 SP", change: "< 10 cái", isPositive: false },
-      ];
-    }
-    // Admin
-    return [
-      { title: "Doanh thu (Đã trừ đơn huỷ)", value: "148.250.000₫", change: "+14.8%", isPositive: true },
-      { title: "Tổng số đơn hàng", value: "1.842 đơn", change: "+8.5%", isPositive: true },
-      { title: "Đơn hàng bị huỷ & hoàn kho", value: "112 đơn", change: "Đã hoàn kho", isPositive: true },
-      { title: "Nhân viên hoạt động", value: "6 nhân viên", change: "Phân quyền chuẩn", isPositive: true },
-    ];
-  }, [role]);
 
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m, idx) => (
-          <div key={idx} className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground">{m.title}</p>
-              <h3 className="text-2xl font-black text-foreground mt-2">{m.value}</h3>
-            </div>
-            <div className="mt-4 pt-3 border-t border-border/50 text-xs flex items-center justify-between">
-              <span className={`font-bold ${m.isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                {m.change}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-bold text-sm text-foreground mb-4">
-          Quy tắc nghiệp vụ đang áp dụng ({role.toUpperCase()})
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-3.5 rounded-xl bg-muted/50 border border-border">
-            <p className="font-semibold text-foreground">Kiểm soát truy cập (Access Control)</p>
-            <p className="text-muted-foreground mt-1">
-              Hệ thống giới hạn quyền truy cập chặt chẽ theo URL và phân quyền trong Báo cáo phân tích.
-            </p>
-          </div>
-          <div className="p-3.5 rounded-xl bg-muted/50 border border-border">
-            <p className="font-semibold text-foreground">Toàn vẹn dữ liệu (Data Integrity)</p>
-            <p className="text-muted-foreground mt-1">
-              Không cho phép tồn kho âm, tự động hoàn kho khi hủy đơn và ngăn chặn ghi nhận trùng lặp.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-// =========================================================================
-// 2. QUẢN LÝ SẢN PHẨM & SKU (Product Staff & Admin)
-// =========================================================================
-function ProductsManagementPanel() {
-  const [productsList] = useState([
-    { id: "SP01", sku: "TSHIRT-BLK-01", name: "Áo Thun Cotton Form Rộng", category: "Áo thun", price: "250.000₫", stock: 45, status: "Đang kinh doanh" },
-    { id: "SP02", sku: "JEANS-SLIM-02", name: "Quần Jeans Slimfit Co Giãn", category: "Quần jeans", price: "480.000₫", stock: 18, status: "Đang kinh doanh" },
-    { id: "SP03", sku: "JACKET-BM-03", name: "Áo Khoác Bomber Kaki Đen", category: "Áo khoác", price: "650.000₫", stock: 0, status: "Ngừng kinh doanh" },
-  ]);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="font-bold text-base text-foreground">
-            Danh sách sản phẩm & Mã SKU (UC02 - Product Staff)
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Quản lý tên, mã barcode/SKU, giá bán không âm, hình ảnh và ngừng kinh doanh an toàn.
-          </p>
-        </div>
-        <button
-          onClick={() => alert("Mở form thêm sản phẩm mới (Nhập tên, SKU, giá bán, ảnh, mô tả)")}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Thêm sản phẩm</span>
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase font-semibold text-[11px]">
-            <tr>
-              <th className="px-5 py-3">Mã SKU</th>
-              <th className="px-5 py-3">Tên sản phẩm</th>
-              <th className="px-5 py-3">Danh mục</th>
-              <th className="px-5 py-3">Giá bán</th>
-              <th className="px-5 py-3">Tồn khả dụng</th>
-              <th className="px-5 py-3">Trạng thái</th>
-              <th className="px-5 py-3 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {productsList.map((p) => (
-              <tr key={p.id} className="hover:bg-muted/40 transition-colors">
-                <td className="px-5 py-3.5 font-mono font-bold text-foreground">{p.sku}</td>
-                <td className="px-5 py-3.5 font-semibold text-foreground">{p.name}</td>
-                <td className="px-5 py-3.5 text-muted-foreground">{p.category}</td>
-                <td className="px-5 py-3.5 font-semibold text-foreground">{p.price}</td>
-                <td className="px-5 py-3.5">
-                  <span className={`font-semibold ${p.stock === 0 ? "text-rose-500" : "text-foreground"}`}>
-                    {p.stock} cái
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span
-                    className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-                      p.status === "Đang kinh doanh"
-                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                        : "bg-muted text-muted-foreground border-border"
-                    }`}
-                  >
-                    {p.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 text-right space-x-2">
-                  <button onClick={() => alert(`Chỉnh sửa ${p.name}`)} className="text-xs text-foreground underline hover:opacity-70">
-                    Sửa
-                  </button>
-                  <button onClick={() => alert(`Ngừng kinh doanh an toàn ${p.name}`)} className="text-xs text-rose-500 hover:underline">
-                    Ngừng bán
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // 3. QUẢN LÝ DANH MỤC (Product Staff & Admin)
@@ -743,11 +593,10 @@ function StaffManagementPanel() {
                 </td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                      s.status === "Đang hoạt động"
+                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${s.status === "Đang hoạt động"
                         ? "bg-emerald-500/10 text-emerald-600"
                         : "bg-rose-500/10 text-rose-600"
-                    }`}
+                      }`}
                   >
                     {s.status}
                   </span>
@@ -920,11 +769,10 @@ function ReviewsModerationPanel() {
                 <span className="font-bold text-foreground text-sm">{r.product}</span>
                 <span className="text-xs text-amber-500 font-semibold">★ {r.rating}/5</span>
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                    r.status === "Hiển thị"
+                  className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${r.status === "Hiển thị"
                       ? "bg-emerald-500/10 text-emerald-600"
                       : "bg-rose-500/10 text-rose-600 font-semibold"
-                  }`}
+                    }`}
                 >
                   {r.status}
                 </span>
