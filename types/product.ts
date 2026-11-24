@@ -1,9 +1,6 @@
-export interface Category {
-  id: number;
-  categoryName: string;
-  status?: string;
-  [key: string]: unknown;
-}
+import type { Category } from "./categories";
+
+export type { Category };
 
 export type ProductStatus = "ON_SALE" | "DISCONTINUED" | "ALL" | string;
 

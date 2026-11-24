@@ -25,10 +25,16 @@ import {
   uploadProductImage,
   deleteProductImage,
 } from "@/services/products";
-import { Product, CreateProductPayload, UpdateProductPayload } from "@/types";
+import { getCategories } from "@/services/categories";
+import { Product, Category, CreateProductPayload, UpdateProductPayload } from "@/types";
 
 export default function ProductsManagementPanel() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([
+    { id: 1, categoryName: "Điện thoại" },
+    { id: 2, categoryName: "Laptop & Máy tính" },
+    { id: 3, categoryName: "Phụ kiện công nghệ" },
+  ]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
@@ -140,6 +146,12 @@ export default function ProductsManagementPanel() {
 
   useEffect(() => {
     fetchProductsList();
+    // Load categories for dropdown
+    getCategories()
+      .then((cats) => {
+        if (Array.isArray(cats) && cats.length > 0) setCategories(cats);
+      })
+      .catch(() => {});
   }, [fetchProductsList]);
 
   // Thông báo biến mất sau 3 giây
@@ -606,15 +618,18 @@ export default function ProductsManagementPanel() {
               </div>
 
               <div>
-                <label className="block font-semibold mb-1">ID Danh mục (categoryId) *</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="1"
+                <label className="block font-semibold mb-1">Danh mục sản phẩm (categoryId) *</label>
+                <select
                   value={formData.categoryId}
                   onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-3 py-2 bg-muted/50 rounded-xl border border-border focus:outline-none focus:ring-1 focus:ring-ring"
-                />
+                  className="w-full px-3 py-2 bg-muted/50 rounded-xl border border-border focus:outline-hidden focus:ring-1 focus:ring-ring"
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.categoryName} (#{c.id})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

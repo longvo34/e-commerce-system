@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import ReportsOverview from "./ReportsOverview";
 import ProductsManagementPanel from "./ProductsManagementPanel";
+import CategoriesManagementPanel from "./CategoriesManagementPanel";
 import {
   LayoutDashboard,
   Package,
@@ -311,50 +312,9 @@ export default function DashboardShell({
 
 
 // =========================================================================
-// 3. QUẢN LÝ DANH MỤC (Product Staff & Admin)
+// 3. QUẢN LÝ DANH MỤC (Product Staff & Admin) -> Tách riêng vào CategoriesManagementPanel.tsx
 // =========================================================================
-function CategoriesManagementPanel() {
-  const categories = [
-    { id: 1, name: "Áo thun nam/nữ", productCount: 42, status: "Đang sử dụng" },
-    { id: 2, name: "Quần jeans & kaki", productCount: 28, status: "Đang sử dụng" },
-    { id: 3, name: "Áo khoác gió & nỉ", productCount: 15, status: "Đang sử dụng" },
-    { id: 4, name: "Phụ kiện thời trang", productCount: 64, status: "Đang sử dụng" },
-  ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-base text-foreground">Danh mục sản phẩm (Product Staff)</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Quản lý cây danh mục sản phẩm (Kiểm tra liên kết trước khi xóa).
-          </p>
-        </div>
-        <button
-          onClick={() => alert("Mở modal thêm danh mục")}
-          className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
-        >
-          + Thêm danh mục
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {categories.map((c) => (
-          <div key={c.id} className="rounded-2xl border border-border bg-card p-5">
-            <h4 className="font-bold text-sm text-foreground">{c.name}</h4>
-            <p className="text-xs text-muted-foreground mt-1">{c.productCount} sản phẩm liên kết</p>
-            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">{c.status}</span>
-              <button onClick={() => alert(`Chỉnh sửa danh mục ${c.name}`)} className="underline text-muted-foreground hover:text-foreground">
-                Chỉnh sửa
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // 4. QUẢN LÝ KHO & NHẬP XUẤT (Inventory Staff & Admin)

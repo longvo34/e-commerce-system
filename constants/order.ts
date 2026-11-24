@@ -8,7 +8,6 @@ export const ORDER_STATUS = {
 
 export type OrderStatusKey = keyof typeof ORDER_STATUS;
 
-// Cấu hình nhãn tiếng Việt, màu sắc badge và mô tả cho từng trạng thái đơn hàng
 export const ORDER_STATUS_MAP: Record<
   string,
   { label: string; color: string; badgeClass: string; description: string }
