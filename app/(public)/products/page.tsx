@@ -1,104 +1,257 @@
+"use client";
+
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ShoppingBag, ChevronDown } from "lucide-react";
+
+import { getProducts } from "@/services/products";
+import { getCategories } from "@/services/categories";
+
+import type { Product, Category, ProductListResponse } from "@/types";
+
+const LIMIT = 10;
 
 export default function ProductsPage() {
-    const products = Array.from({ length: 12 }, (_, i) => ({
-        id: i + 1,
-        tag: "Mua một lần",
-    }));
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-    return (
-        <div className="w-full bg-background text-foreground py-8 sm:py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Breadcrumb  */}
-                <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                    <Link href="/" className="hover:text-foreground transition-colors">
-                        Trang chủ
-                    </Link>
-                    <span>/</span>
-                    <span className="text-foreground font-medium">Sản phẩm</span>
-                </nav>
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
 
-                {/* Header Section */}
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                            Khám phá sản phẩm
-                        </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Tìm sản phẩm từ người bán uy tín
-                        </p>
-                    </div>
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-                    {/* Filter / Sort Dropdowns */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                        >
-                            <span>Tất cả</span>
-                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                        >
-                            <span>Sắp xếp</span>
-                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                    </div>
-                </div>
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [categoryError, setCategoryError] = useState("");
 
-                {/* Product Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {products.map((item) => (
-                        <div
-                            key={item.id}
-                            className="rounded-2xl border border-border bg-card text-card-foreground p-3 hover:shadow-sm transition-shadow flex flex-col justify-between"
-                        >
-                            <div>
-                                <Link href={`/products/${item.id}`} className="block">
-                                    <div className="aspect-square w-full rounded-xl bg-muted mb-3 hover:opacity-90 transition-opacity" />
-                                </Link>
-                                <span className="inline-block rounded-full bg-secondary text-secondary-foreground px-2.5 py-1 text-[11px] font-medium mb-3">
-                                    {item.tag}
-                                </span>
-                            </div>
-                            <button
-                                type="button"
-                                className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity w-fit group"
-                            >
-                                <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center group-hover:bg-primary/90 transition-colors">
-                                    <ShoppingBag className="w-3.5 h-3.5" />
-                                </span>
-                                <span className="text-xs font-medium">Thêm vào giỏ</span>
-                            </button>
-                        </div>
-                    ))}
-                </div>
+  // GET /categories
+  useEffect(() => {
+    let cancelled = false;
 
-                {/* Pagination */}
-                <div className="mt-14 flex items-center justify-center gap-2">
-                    <button
-                        type="button"
-                        className="w-8 h-8 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center"
-                    >
-                        1
-                    </button>
-                    <button
-                        type="button"
-                        className="w-8 h-8 rounded-full border border-border bg-background text-foreground hover:bg-muted text-xs font-medium flex items-center justify-center transition-colors"
-                    >
-                        2
-                    </button>
-                    <button
-                        type="button"
-                        className="w-8 h-8 rounded-full border border-border bg-background text-foreground hover:bg-muted text-xs font-medium flex items-center justify-center transition-colors"
-                    >
-                        3
-                    </button>
-                </div>
-            </div>
+    async function loadCategories() {
+      try {
+        const data = await getCategories({ status: "ACTIVE" });
+
+        if (!cancelled) {
+          setCategories(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCategoryError(
+            err instanceof Error ? err.message : "Không thể tải danh mục.",
+          );
+        }
+      }
+    }
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // GET /products
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const data: ProductListResponse = await getProducts({
+          search: search || undefined,
+          categoryId: categoryId || undefined,
+          status: "ON_SALE",
+          page,
+          limit: LIMIT,
+        });
+
+        if (cancelled) return;
+
+        setProducts(data.items);
+        setTotal(data.total);
+      } catch (err) {
+        if (cancelled) return;
+
+        setProducts([]);
+        setError(
+          err instanceof Error ? err.message : "Không thể tải sản phẩm.",
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [search, categoryId, page]);
+
+  function handleSearch(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPage(1);
+    setSearch(searchInput.trim());
+  }
+
+  const totalPages = Math.ceil(total / LIMIT);
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+
+  return (
+    <main className="w-full bg-background py-8 text-foreground sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumb */}
+        <nav className="mb-6 flex gap-2 text-sm text-muted-foreground">
+          <Link href="/">Trang chủ</Link>
+          <span>/</span>
+          <span className="font-medium text-foreground">Sản phẩm</span>
+        </nav>
+
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-extrabold sm:text-3xl">
+            Khám phá sản phẩm
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tìm kiếm sản phẩm phù hợp với bạn
+          </p>
         </div>
-    );
+
+        {/* Search & Category Filter */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row">
+          <form onSubmit={handleSearch} className="flex flex-1 gap-2">
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Tìm kiếm sản phẩm..."
+              className="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+            />
+
+            <button
+              type="submit"
+              className="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
+            >
+              Tìm kiếm
+            </button>
+          </form>
+
+          <select
+            value={categoryId}
+            onChange={(e) => {
+              setCategoryId(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-xl border border-border bg-background px-4 py-2 text-sm"
+            aria-label="Lọc danh mục"
+          >
+            <option value="">Tất cả danh mục</option>
+
+            {categories.map((category) => (
+              <option key={category.id} value={String(category.id)}>
+                {category.categoryName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {categoryError && (
+          <p role="alert" className="mb-4 text-sm text-destructive">
+            Không thể tải bộ lọc danh mục: {categoryError}
+          </p>
+        )}
+
+        {/* Product List */}
+        {loading ? (
+          <div className="py-20 text-center text-muted-foreground">
+            Đang tải sản phẩm...
+          </div>
+        ) : error ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/30 p-6 text-center text-destructive"
+          >
+            {error}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card py-20 text-center">
+            <h2 className="text-lg font-semibold">Chưa có sản phẩm</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Không tìm thấy sản phẩm phù hợp.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex flex-col rounded-2xl border border-border bg-card p-3"
+                >
+                  <Link href={`/products/${product.id}`}>
+                    <div className="mb-3 flex aspect-square items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
+                      {product.imageUrl
+                        ? "Xem ảnh sản phẩm ở trang chi tiết"
+                        : "Chưa có ảnh"}
+                    </div>
+                  </Link>
+
+                  <h2 className="mb-2 font-semibold">{product.productName}</h2>
+
+                  <p className="mb-4 text-sm font-medium">
+                    {formatPrice(product.price)}
+                  </p>
+
+                  <Link
+                    href={`/products/${product.id}`}
+                    className="mt-auto rounded-xl bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground"
+                  >
+                    Xem chi tiết
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-40"
+                >
+                  Trước
+                </button>
+
+                <span className="text-sm">
+                  Trang {page} / {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-40"
+                >
+                  Sau
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </main>
+  );
 }

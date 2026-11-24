@@ -1,275 +1,232 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-    ShoppingBag,
-    ChevronDown,
-    ArrowRight,
-    Check,
-    Truck,
-    Minus,
-    Plus,
-} from "lucide-react";
+
+import { getProductById } from "@/services/products";
+import { getCategoryById } from "@/services/categories";
+import type { Product, Category } from "@/types";
+
+function ProductDetailContent() {
+  const params = useParams();
+  const id = params.id;
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProduct() {
+      setLoading(true);
+      setError("");
+      setProduct(null);
+      setCategory(null);
+
+      const productId = Number(id);
+
+      if (
+        typeof id !== "string" ||
+        !Number.isSafeInteger(productId) ||
+        productId <= 0
+      ) {
+        setError("ID sản phẩm không hợp lệ.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // GET /products/{id}
+        const productData = await getProductById(productId);
+
+        if (cancelled) return;
+
+        setProduct(productData);
+
+        // GET /categories/{id}
+        // Chỉ gọi khi Product có categoryId hợp lệ.
+        const categoryId = Number(productData.categoryId);
+
+        if (
+          productData.categoryId != null &&
+          Number.isSafeInteger(categoryId) &&
+          categoryId > 0
+        ) {
+          try {
+            const categoryData = await getCategoryById(categoryId);
+
+            if (!cancelled) {
+              setCategory(categoryData);
+            }
+          } catch (categoryError) {
+            // Không làm lỗi toàn trang nếu chỉ thiếu danh mục.
+            console.error("Không thể tải danh mục sản phẩm:", categoryError);
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Không thể tải chi tiết sản phẩm.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadProduct();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-20 text-center">
+        <p className="text-muted-foreground">Đang tải chi tiết sản phẩm...</p>
+      </main>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold">Không thể hiển thị sản phẩm</h1>
+
+        <p role="alert" className="mt-3 text-muted-foreground">
+          {error || "Không tìm thấy thông tin sản phẩm."}
+        </p>
+
+        <Link
+          href="/products"
+          className="mt-6 inline-block rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+        >
+          Quay lại danh sách sản phẩm
+        </Link>
+      </main>
+    );
+  }
+
+  return (
+    <main className="w-full bg-background py-8 text-foreground sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumb */}
+        <nav className="mb-8 flex flex-wrap gap-2 text-sm text-muted-foreground">
+          <Link href="/">Trang chủ</Link>
+          <span>/</span>
+          <Link href="/products">Sản phẩm</Link>
+          <span>/</span>
+          <span className="font-medium text-foreground">
+            {product.productName}
+          </span>
+        </nav>
+
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+          {/* Product image area */}
+          <div className="flex aspect-square items-center justify-center rounded-2xl border border-border bg-muted">
+            <p className="text-sm text-muted-foreground">
+              {product.imageUrl
+                ? "Ảnh sản phẩm sẽ được tích hợp sau"
+                : "Sản phẩm chưa có ảnh"}
+            </p>
+          </div>
+
+          {/* Product information */}
+          <div>
+            <h1 className="text-2xl font-extrabold sm:text-3xl">
+              {product.productName}
+            </h1>
+
+            <p className="mt-3 text-sm text-muted-foreground">
+              SKU: {product.skuCode}
+            </p>
+
+            <p className="mt-5 text-3xl font-bold">
+              {formatPrice(product.price)}
+            </p>
+
+            <div className="mt-6 space-y-4 rounded-2xl border border-border bg-card p-6">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Trạng thái</span>
+                <span className="font-medium">
+                  {product.status === "ON_SALE"
+                    ? "Đang bán"
+                    : product.status === "DISCONTINUED"
+                      ? "Ngừng kinh doanh"
+                      : product.status}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Danh mục</span>
+                <span className="font-medium">
+                  {category?.categoryName ||
+                    product.category?.categoryName ||
+                    (product.categoryId != null
+                      ? `Danh mục #${product.categoryId}`
+                      : "Chưa có thông tin")}
+                </span>
+              </div>
+
+              {product.stock != null && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Tồn kho</span>
+                  <span className="font-medium">{product.stock}</span>
+                </div>
+              )}
+
+              {product.rating != null && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Đánh giá</span>
+                  <span className="font-medium">{product.rating}</span>
+                </div>
+              )}
+            </div>
+
+            <p className="mt-5 text-sm text-muted-foreground">
+              Chức năng thêm vào giỏ hàng sẽ được kết nối khi có sản phẩm thực
+              tế để kiểm thử.
+            </p>
+          </div>
+        </div>
+
+        {/* Description */}
+        <section className="mt-12 rounded-2xl border border-border bg-card p-6">
+          <h2 className="mb-4 text-xl font-bold">Mô tả sản phẩm</h2>
+          <p className="whitespace-pre-line text-sm text-muted-foreground">
+            {product.description || "Chưa có mô tả sản phẩm."}
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}
 
 export default function ProductDetailPage() {
-    const [selectedVariant, setSelectedVariant] = useState<number>(2);
-    const [selectedThumbnail, setSelectedThumbnail] = useState<number>(0);
-    const [quantity, setQuantity] = useState<number>(1);
-
-    const relatedProducts = Array.from({ length: 4 }, (_, i) => ({
-        id: i + 1,
-        tag: "Mua một lần",
-    }));
-
-    return (
-        <div className="w-full bg-background text-foreground py-8 sm:py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* 1. Breadcrumb  */}
-                <nav
-                    aria-label="Breadcrumb"
-                    className="flex items-center gap-2 text-sm text-muted-foreground mb-8"
-                >
-                    <Link href="/" className="hover:text-foreground transition-colors">
-                        Trang chủ
-                    </Link>
-                    <span>/</span>
-                    <Link
-                        href="/products"
-                        className="hover:text-foreground transition-colors"
-                    >
-                        Sản phẩm
-                    </Link>
-                    <span>/</span>
-                    <span className="text-foreground font-medium">Chi tiết sản phẩm</span>
-                </nav>
-
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 mb-16">
-
-                    <div>
-
-                        <div className="aspect-square w-full rounded-2xl bg-muted border border-border/40" />
-
-
-                        <div className="grid grid-cols-4 gap-3 mt-4">
-                            {Array.from({ length: 4 }, (_, idx) => (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => setSelectedThumbnail(idx)}
-                                    className={`aspect-square rounded-xl bg-muted border transition-all ${selectedThumbnail === idx
-                                        ? "border-foreground ring-1 ring-foreground"
-                                        : "border-border/40 hover:border-foreground/50"
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-
-                    <div className="flex flex-col justify-between">
-                        <div>
-
-                            <div className="flex items-center gap-2 justify-end mb-6">
-                                <div className="w-14 h-6 rounded-full bg-muted" />
-                                <div className="w-20 h-6 rounded-full bg-muted" />
-                            </div>
-
-
-                            <div className="rounded-2xl border border-border bg-card p-4 space-y-3 mb-6">
-
-                                <div
-                                    onClick={() => setSelectedVariant(1)}
-                                    className={`rounded-xl border p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${selectedVariant === 1
-                                        ? "border-foreground bg-background"
-                                        : "border-border hover:bg-muted/40"
-                                        }`}
-                                >
-                                    <span
-                                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedVariant === 1
-                                            ? "border-foreground bg-foreground text-background"
-                                            : "border-muted-foreground"
-                                            }`}
-                                    >
-                                        {selectedVariant === 1 && (
-                                            <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                        )}
-                                    </span>
-                                    <span className="text-sm font-medium text-foreground">
-                                        Mẫu 1
-                                    </span>
-                                </div>
-
-
-                                <div
-                                    onClick={() => setSelectedVariant(2)}
-                                    className={`rounded-xl border p-3.5 cursor-pointer transition-colors ${selectedVariant === 2
-                                        ? "border-2 border-foreground bg-background"
-                                        : "border-border hover:bg-muted/40"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <span
-                                                className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedVariant === 2
-                                                    ? "border-foreground bg-foreground text-background"
-                                                    : "border-muted-foreground"
-                                                    }`}
-                                            >
-                                                {selectedVariant === 2 && (
-                                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                                )}
-                                            </span>
-                                            <span className="text-sm font-medium text-foreground">
-                                                Mẫu 2
-                                            </span>
-                                        </div>
-
-
-                                        <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
-                                            <span className="w-6 h-2 rounded-full bg-muted inline-block" />
-                                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="mt-4 pt-3 border-t border-border/40">
-                                        <button
-                                            type="button"
-                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground hover:underline"
-                                        >
-                                            <span>Xem chi tiết</span>
-                                            <ArrowRight className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="block text-xs font-semibold text-foreground mb-2">
-                                    Số lượng
-                                </label>
-                                <div className="inline-flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-1.5">
-                                    <span className="text-sm font-medium text-foreground min-w-[1.25rem] text-center">
-                                        {quantity}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                                        className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        <Minus className="w-3 h-3 stroke-[2.5]" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQuantity((prev) => prev + 1)}
-                                        className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
-                                    >
-                                        <Plus className="w-3 h-3 stroke-[2.5]" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 mb-6">
-                                <Link
-                                    href="/cart"
-                                    className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-xs"
-                                >
-                                    <ShoppingBag className="w-4 h-4" />
-                                    <span>+ Thêm vào giỏ</span>
-                                </Link>
-                                <Link
-                                    href="/profile-confirmation"
-                                    className="block w-full rounded-xl border border-foreground bg-background text-foreground hover:bg-muted py-3.5 text-sm font-semibold text-center transition-colors"
-                                >
-                                    Mua
-                                </Link>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="aspect-[4/3] rounded-2xl bg-muted" />
-                                <div className="aspect-[4/3] rounded-2xl bg-muted" />
-                                <div className="aspect-[4/3] rounded-2xl bg-muted" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mb-16">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                            Chi tiết sản phẩm
-                        </h2>
-                        <div className="w-28 h-7 rounded-full bg-muted" />
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 min-h-[220px] flex flex-col justify-between">
-                            <div>
-                                <h3 className="text-base font-bold text-foreground mb-4">
-                                    Mô tả
-                                </h3>
-                            </div>
-                            <div>
-                                <Truck className="w-5 h-5 text-foreground stroke-[1.75]" />
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-border bg-card p-6 min-h-[220px]">
-                            <h3 className="text-base font-bold text-foreground mb-6">
-                                Thông số kỹ thuật
-                            </h3>
-                            <div className="space-y-4 text-xs font-medium text-foreground">
-                                <p>Kích thước</p>
-                                <p>Khối lượng</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                            Có thể bạn quan tâm
-                        </h2>
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                        >
-                            <span>Tất cả sản phẩm</span>
-                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {relatedProducts.map((item) => (
-                            <div
-                                key={item.id}
-                                className="rounded-2xl border border-border bg-card text-card-foreground p-3 hover:shadow-sm transition-shadow flex flex-col justify-between"
-                            >
-                                <div>
-                                    <Link href={`/products/${item.id}`} className="block">
-                                        <div className="aspect-square w-full rounded-xl bg-muted mb-3 hover:opacity-90 transition-opacity" />
-                                    </Link>
-                                    <span className="inline-block rounded-full bg-secondary text-secondary-foreground px-2.5 py-1 text-[11px] font-medium mb-3">
-                                        {item.tag}
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity w-fit group"
-                                >
-                                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center group-hover:bg-primary/90 transition-colors">
-                                        <ShoppingBag className="w-3.5 h-3.5" />
-                                    </span>
-                                    <span className="text-xs font-medium">Thêm vào giỏ</span>
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-7xl px-4 py-20 text-center">
+          <p className="text-muted-foreground">Đang tải chi tiết sản phẩm...</p>
+        </main>
+      }
+    >
+      <ProductDetailContent />
+    </Suspense>
+  );
 }
