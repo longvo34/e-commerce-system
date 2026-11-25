@@ -16,7 +16,7 @@ import {
   getOrdersCountByStatus,
   getLowStock,
 } from "@/services/reports";
-import { ORDER_STATUS_MAP } from "@/constants/order";
+import { ORDER_STATUS_MAP, STATUS_THEME } from "@/constants";
 import { OrdersCountByStatus, LowStockProduct } from "@/types";
 
 export type RoleType = "admin" | "product_staff" | "inventory_staff";
@@ -123,32 +123,32 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
           value: `${ordersStats.PENDING || 0} đơn`,
           desc: "Cần tiếp nhận ngay",
           icon: Clock,
-          color: "text-amber-500",
-          bgColor: "bg-amber-500/10",
+          color: STATUS_THEME.WARNING.textColor,
+          bgColor: STATUS_THEME.WARNING.bgColor,
         },
         {
           title: "Đang đóng gói & chuẩn bị",
           value: `${ordersStats.PREPARING || 0} đơn`,
           desc: "Đang xuất kho đóng gói",
           icon: PackageCheck,
-          color: "text-blue-500",
-          bgColor: "bg-blue-500/10",
+          color: STATUS_THEME.INFO.textColor,
+          bgColor: STATUS_THEME.INFO.bgColor,
         },
         {
           title: "Đang giao vận",
           value: `${ordersStats.SHIPPING || 0} đơn`,
           desc: "Đang trên đường giao",
           icon: Truck,
-          color: "text-purple-500",
-          bgColor: "bg-purple-500/10",
+          color: STATUS_THEME.PURPLE.textColor,
+          bgColor: STATUS_THEME.PURPLE.bgColor,
         },
         {
           title: "Cảnh báo tồn kho thấp",
           value: `${lowStockProducts.length} SP`,
           desc: `Tồn kho ≤ ${threshold} cái`,
           icon: AlertTriangle,
-          color: "text-rose-500",
-          bgColor: "bg-rose-500/10",
+          color: STATUS_THEME.DANGER.textColor,
+          bgColor: STATUS_THEME.DANGER.bgColor,
         },
       ];
     }
@@ -160,32 +160,32 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
           value: `${lowStockProducts.length} SP`,
           desc: `Cần bổ sung kho (≤ ${threshold})`,
           icon: AlertTriangle,
-          color: "text-rose-500",
-          bgColor: "bg-rose-500/10",
+          color: STATUS_THEME.DANGER.textColor,
+          bgColor: STATUS_THEME.DANGER.bgColor,
         },
         {
           title: "Đơn hàng giao thành công",
           value: `${ordersStats.DELIVERED || 0} đơn`,
           desc: "Sản phẩm đã bán & giao",
           icon: PackageCheck,
-          color: "text-emerald-500",
-          bgColor: "bg-emerald-500/10",
+          color: STATUS_THEME.SUCCESS.textColor,
+          bgColor: STATUS_THEME.SUCCESS.bgColor,
         },
         {
           title: "Tổng số đơn hàng phát sinh",
           value: `${totalOrders} đơn`,
           desc: "Nhu cầu thị trường",
           icon: TrendingUp,
-          color: "text-blue-500",
-          bgColor: "bg-blue-500/10",
+          color: STATUS_THEME.INFO.textColor,
+          bgColor: STATUS_THEME.INFO.bgColor,
         },
         {
           title: "Đơn hủy & hoàn kho",
           value: `${ordersStats.CANCELLED || 0} đơn`,
           desc: "Tự động hoàn lại kho",
           icon: RotateCcw,
-          color: "text-amber-500",
-          bgColor: "bg-amber-500/10",
+          color: STATUS_THEME.WARNING.textColor,
+          bgColor: STATUS_THEME.WARNING.bgColor,
         },
       ];
     }
@@ -197,32 +197,32 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
         value: `${revenueTotal.toLocaleString("vi-VN")}₫`,
         desc: "Chỉ tính đơn DELIVERED",
         icon: TrendingUp,
-        color: "text-emerald-500",
-        bgColor: "bg-emerald-500/10",
+        color: STATUS_THEME.SUCCESS.textColor,
+        bgColor: STATUS_THEME.SUCCESS.bgColor,
       },
       {
         title: "Tổng số đơn hàng",
         value: `${totalOrders} đơn`,
         desc: `Đã giao: ${ordersStats.DELIVERED || 0} đơn`,
         icon: PackageCheck,
-        color: "text-blue-500",
-        bgColor: "bg-blue-500/10",
+        color: STATUS_THEME.INFO.textColor,
+        bgColor: STATUS_THEME.INFO.bgColor,
       },
       {
         title: "Đơn hàng chờ xử lý",
         value: `${(ordersStats.PENDING || 0) + (ordersStats.PREPARING || 0)} đơn`,
         desc: "Chờ tiếp nhận & đóng gói",
         icon: Clock,
-        color: "text-amber-500",
-        bgColor: "bg-amber-500/10",
+        color: STATUS_THEME.WARNING.textColor,
+        bgColor: STATUS_THEME.WARNING.bgColor,
       },
       {
         title: "Sản phẩm tồn kho thấp",
         value: `${lowStockProducts.length} SP`,
         desc: `Tồn kho ≤ ${threshold} cái`,
         icon: AlertTriangle,
-        color: "text-rose-500",
-        bgColor: "bg-rose-500/10",
+        color: STATUS_THEME.DANGER.textColor,
+        bgColor: STATUS_THEME.DANGER.bgColor,
       },
     ];
   }, [role, ordersStats, lowStockProducts.length, threshold, revenueTotal, totalOrders]);
@@ -347,7 +347,7 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-emerald-500" />
+                    <Calendar className={`w-4 h-4 ${STATUS_THEME.SUCCESS.textColor}`} />
                     <span>Doanh thu theo thời gian (GET /reports/revenue)</span>
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -382,7 +382,7 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
 
               <div className="mb-6">
                 <span className="text-xs text-muted-foreground">Tổng doanh thu kỳ này:</span>
-                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                <p className={`text-2xl font-black ${STATUS_THEME.SUCCESS.textColor}`}>
                   {revenueTotal.toLocaleString("vi-VN")}₫
                 </p>
               </div>
@@ -430,7 +430,7 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4 text-rose-500" />
+                  <AlertTriangle className={`w-4 h-4 ${STATUS_THEME.DANGER.textColor}`} />
                   <span>Sản phẩm sắp hết hàng (GET /reports/low-stock)</span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -484,15 +484,15 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
                           <td className="px-3.5 py-2.5 text-muted-foreground">
                             {p.category || "--"}
                           </td>
-                          <td className="px-3.5 py-2.5 text-right font-black text-rose-500">
+                          <td className={`px-3.5 py-2.5 text-right font-black ${STATUS_THEME.DANGER.textColor}`}>
                             {stockVal} cái
                           </td>
                           <td className="px-3.5 py-2.5 text-center">
                             <span
-                              className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                                 stockVal === 0
-                                  ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
-                                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                  ? STATUS_THEME.DANGER.badgeClass
+                                  : STATUS_THEME.WARNING.badgeClass
                               }`}
                             >
                               {stockVal === 0 ? "Hết hàng" : "Sắp hết"}
@@ -509,7 +509,7 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
 
           <div className="mt-3 pt-3 border-t border-border/50 text-[11px] text-muted-foreground flex items-center justify-between">
             <span>Tổng cộng: {lowStockProducts.length} sản phẩm cần nhập thêm</span>
-            <span className="font-semibold text-rose-500">Threshold: {threshold}</span>
+            <span className={`font-semibold ${STATUS_THEME.DANGER.textColor}`}>Threshold: {threshold}</span>
           </div>
         </div>
       </div>

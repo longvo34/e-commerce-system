@@ -22,7 +22,7 @@ import {
   deleteCategory,
   deactivateCategory,
 } from "@/services/categories";
-import { CATEGORY_STATUS_MAP } from "@/constants";
+import { CATEGORY_STATUS_MAP, STATUS_THEME, NOTIFICATION_THEME } from "@/constants";
 
 const MOCK_CATEGORIES: Category[] = [
   { id: 1, categoryName: "Điện thoại & Tablet", status: "ACTIVE", productCount: 42 },
@@ -235,11 +235,7 @@ export default function CategoriesManagementPanel() {
       {notification && (
         <div
           className={`p-4 rounded-xl flex items-center justify-between text-sm transition-all border ${
-            notification.type === "success"
-              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-              : notification.type === "error"
-              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-              : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+            NOTIFICATION_THEME[notification.type] || STATUS_THEME.INFO.badgeClass
           }`}
         >
           <div className="flex items-center gap-2">
@@ -389,16 +385,16 @@ export default function CategoriesManagementPanel() {
                       className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors flex items-center gap-1 text-[11px] font-medium"
                       title="Chỉnh sửa danh mục"
                     >
-                      <Edit2 className="w-3.5 h-3.5 text-blue-500" />
+                      <Edit2 className={`w-3.5 h-3.5 ${STATUS_THEME.INFO.textColor}`} />
                       Sửa
                     </button>
                     {c.status !== "INACTIVE" && (
                       <button
                         onClick={() => handleDeactivate(c)}
-                        className="p-1.5 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 rounded-lg transition-colors flex items-center gap-1 text-[11px] font-medium"
+                        className={`p-1.5 text-muted-foreground hover:${STATUS_THEME.WARNING.textColor} hover:${STATUS_THEME.WARNING.bgColor} rounded-lg transition-colors flex items-center gap-1 text-[11px] font-medium`}
                         title="Ngừng sử dụng"
                       >
-                        <PowerOff className="w-3.5 h-3.5 text-amber-500" />
+                        <PowerOff className={`w-3.5 h-3.5 ${STATUS_THEME.WARNING.textColor}`} />
                         Ngừng
                       </button>
                     )}
@@ -406,10 +402,10 @@ export default function CategoriesManagementPanel() {
 
                   <button
                     onClick={() => handleDelete(c)}
-                    className="p-1.5 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 rounded-lg transition-colors"
+                    className={`p-1.5 text-muted-foreground hover:${STATUS_THEME.DANGER.textColor} hover:${STATUS_THEME.DANGER.bgColor} rounded-lg transition-colors`}
                     title="Xóa danh mục (chỉ khi không có sản phẩm liên kết)"
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                    <Trash2 className={`w-3.5 h-3.5 ${STATUS_THEME.DANGER.textColor}`} />
                   </button>
                 </div>
               </div>
@@ -438,7 +434,7 @@ export default function CategoriesManagementPanel() {
             <form onSubmit={handleAddSubmit} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-foreground">
-                  Tên danh mục <span className="text-rose-500">*</span>
+                  Tên danh mục <span className={STATUS_THEME.DANGER.textColor}>*</span>
                 </label>
                 <input
                   type="text"
@@ -494,7 +490,7 @@ export default function CategoriesManagementPanel() {
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-foreground">
-                  Tên danh mục <span className="text-rose-500">*</span>
+                  Tên danh mục <span className={STATUS_THEME.DANGER.textColor}>*</span>
                 </label>
                 <input
                   type="text"
