@@ -1,3 +1,5 @@
+import { STATUS_THEME } from "./colors";
+
 export const CATEGORY_STATUS = {
   ACTIVE: "ACTIVE",       // Đang sử dụng
   INACTIVE: "INACTIVE",   // Ngừng sử dụng
@@ -12,14 +14,14 @@ export const CATEGORY_STATUS_MAP: Record<
 > = {
   ACTIVE: {
     label: "Đang sử dụng",
-    color: "#10b981",
-    badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    color: STATUS_THEME.SUCCESS.color,
+    badgeClass: STATUS_THEME.SUCCESS.badgeClass,
     description: "Danh mục đang hoạt động và hiển thị cho khách hàng",
   },
   INACTIVE: {
     label: "Ngừng sử dụng",
-    color: "#6b7280",
-    badgeClass: "bg-muted text-muted-foreground border-border",
+    color: STATUS_THEME.MUTED.color,
+    badgeClass: STATUS_THEME.MUTED.badgeClass,
     description: "Danh mục đã tạm ngừng hoặc ngừng kinh doanh",
   },
 };

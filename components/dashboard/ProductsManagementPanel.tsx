@@ -27,6 +27,7 @@ import {
 } from "@/services/products";
 import { getCategories } from "@/services/categories";
 import { Product, Category, CreateProductPayload, UpdateProductPayload } from "@/types";
+import { STATUS_THEME } from "@/constants";
 
 export default function ProductsManagementPanel() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -319,14 +320,14 @@ export default function ProductsManagementPanel() {
     <div className="space-y-6">
       {/* Thông báo Alert */}
       {successMessage && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+        <div className={`p-4 rounded-xl border text-xs font-semibold flex items-center gap-2 animate-in fade-in ${STATUS_THEME.SUCCESS.badgeClass}`}>
           <CheckCircle className="w-4 h-4 flex-shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+        <div className={`p-4 rounded-xl border text-xs font-semibold flex items-center gap-2 animate-in fade-in ${STATUS_THEME.DANGER.badgeClass}`}>
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
@@ -487,13 +488,13 @@ export default function ProductsManagementPanel() {
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                             isOnSale
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                              : "bg-muted text-muted-foreground border-border"
+                              ? STATUS_THEME.SUCCESS.badgeClass
+                              : STATUS_THEME.MUTED.badgeClass
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              isOnSale ? "bg-emerald-500" : "bg-muted-foreground"
+                              isOnSale ? STATUS_THEME.SUCCESS.dotColor : STATUS_THEME.MUTED.dotColor
                             }`}
                           />
                           {isOnSale ? "Đang bán" : "Ngừng bán"}
@@ -527,8 +528,8 @@ export default function ProductsManagementPanel() {
                             title={isOnSale ? "Ngừng kinh doanh" : "Mở bán lại"}
                             className={`p-1.5 rounded-lg border transition-colors ${
                               isOnSale
-                                ? "border-amber-500/20 text-amber-600 hover:bg-amber-500/10"
-                                : "border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10"
+                                ? STATUS_THEME.WARNING.outlineBtnClass
+                                : STATUS_THEME.SUCCESS.outlineBtnClass
                             }`}
                           >
                             <Power className="w-3.5 h-3.5" />
@@ -538,7 +539,7 @@ export default function ProductsManagementPanel() {
                           <button
                             onClick={() => handleDeleteProduct(p)}
                             title="Xóa sản phẩm"
-                            className="p-1.5 rounded-lg border border-rose-500/20 text-rose-600 hover:bg-rose-500/10 transition-colors"
+                            className={`p-1.5 rounded-lg border transition-colors ${STATUS_THEME.DANGER.outlineBtnClass}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -708,7 +709,7 @@ export default function ProductsManagementPanel() {
               {imageModalProduct.imageUrl && (
                 <button
                   onClick={() => handleDeleteImage(imageModalProduct)}
-                  className="w-full py-1.5 rounded-lg border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 font-semibold"
+                  className={`w-full py-1.5 rounded-lg border font-semibold transition-colors ${STATUS_THEME.DANGER.outlineBtnClass}`}
                 >
                   Xóa ảnh hiện tại
                 </button>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import ReportsOverview from "./ReportsOverview";
 import ProductsManagementPanel from "./ProductsManagementPanel";
 import CategoriesManagementPanel from "./CategoriesManagementPanel";
+import InventoryManagementPanel from "./InventoryManagementPanel";
+import { STATUS_THEME } from "@/constants";
 import {
   LayoutDashboard,
   Package,
@@ -160,7 +162,7 @@ export default function DashboardShell({
         {/* Role Badge Indicator */}
         <div className="px-5 py-3.5 border-b border-border bg-muted/20">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className={`w-2 h-2 rounded-full ${STATUS_THEME.SUCCESS.dotColor} animate-pulse`} />
             <span className="text-xs font-bold text-foreground">
               {roleConfig.badge}
             </span>
@@ -178,8 +180,8 @@ export default function DashboardShell({
                 type="button"
                 onClick={() => setActiveTab(item.key)}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${isActive
-                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
@@ -244,8 +246,8 @@ export default function DashboardShell({
                       setIsMobileSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium ${isActive
-                        ? "bg-primary text-primary-foreground font-semibold"
-                        : "text-muted-foreground hover:bg-muted"
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-muted"
                       }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -307,88 +309,6 @@ export default function DashboardShell({
   );
 }
 
-
-
-
-
-// =========================================================================
-// 3. QUẢN LÝ DANH MỤC (Product Staff & Admin) -> Tách riêng vào CategoriesManagementPanel.tsx
-// =========================================================================
-
-
-// =========================================================================
-// 4. QUẢN LÝ KHO & NHẬP XUẤT (Inventory Staff & Admin)
-// =========================================================================
-function InventoryManagementPanel() {
-  const inventoryHistory = [
-    { id: "NK-001", type: "Nhập kho", sku: "TSHIRT-BLK-01", product: "Áo Thun Cotton Form Rộng", qty: "+50", staff: "Inventory Staff (Kho 1)", date: "12/11/2026 14:00", note: "Nhập hàng từ xưởng may" },
-    { id: "XK-002", type: "Xuất kho đơn hàng", sku: "JEANS-SLIM-02", product: "Quần Jeans Slimfit Co Giãn", qty: "-2", staff: "Hệ thống tự động", date: "12/11/2026 10:15", note: "Đơn #ORD-9820 xác nhận" },
-    { id: "DC-003", type: "Điều chỉnh kiểm kê", sku: "JACKET-BM-03", product: "Áo Khoác Bomber Kaki Đen", qty: "-1", staff: "Nguyễn Văn Kho", date: "11/11/2026 18:00", note: "Hàng lỗi đường may sau kiểm kê" },
-    { id: "HK-004", type: "Hoàn kho huỷ đơn", sku: "TSHIRT-BLK-01", product: "Áo Thun Cotton Form Rộng", qty: "+1", staff: "Hệ thống tự động", date: "11/11/2026 09:30", note: "Khách huỷ đơn #ORD-9818" },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="font-bold text-base text-foreground">
-            Quản lý Kho & Lịch sử Nhập / Xuất / Điều chỉnh (Inventory Staff)
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Không cho phép tồn kho âm. Hoàn kho an toàn khi huỷ đơn, ngăn chặn cập nhật trùng lặp.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => alert("Ghi nhận giao dịch Nhập kho")}
-            className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90"
-          >
-            + Ghi nhận nhập kho
-          </button>
-          <button
-            onClick={() => alert("Điều chỉnh tồn kho sau kiểm kê")}
-            className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold hover:bg-muted"
-          >
-            Điều chỉnh kiểm kê
-          </button>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase font-semibold text-[11px]">
-            <tr>
-              <th className="px-5 py-3">Mã GD</th>
-              <th className="px-5 py-3">Loại giao dịch</th>
-              <th className="px-5 py-3">Sản phẩm</th>
-              <th className="px-5 py-3">Số lượng</th>
-              <th className="px-5 py-3">Người thực hiện</th>
-              <th className="px-5 py-3">Ghi chú</th>
-              <th className="px-5 py-3">Thời gian</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {inventoryHistory.map((item) => (
-              <tr key={item.id} className="hover:bg-muted/40 transition-colors">
-                <td className="px-5 py-3 font-mono font-bold text-foreground">{item.id}</td>
-                <td className="px-5 py-3 font-semibold text-foreground">{item.type}</td>
-                <td className="px-5 py-3 text-foreground">{item.product}</td>
-                <td className="px-5 py-3 font-mono font-bold">
-                  <span className={item.qty.startsWith("+") ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
-                    {item.qty}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-muted-foreground">{item.staff}</td>
-                <td className="px-5 py-3 text-xs text-muted-foreground">{item.note}</td>
-                <td className="px-5 py-3 text-xs text-muted-foreground">{item.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // 5. XỬ LÝ ĐƠN HÀNG (Inventory Staff & Admin)
@@ -463,7 +383,7 @@ function OrdersProcessingPanel() {
                   {o.status === "Đang giao" && (
                     <button
                       onClick={() => updateStatus(o.id, "Đã giao")}
-                      className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-medium"
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${STATUS_THEME.SUCCESS.btnClass}`}
                     >
                       Xác nhận đã giao
                     </button>
@@ -474,7 +394,7 @@ function OrdersProcessingPanel() {
                         const reason = prompt("Nhập lý do huỷ đơn hàng & hoàn kho:");
                         if (reason) updateStatus(o.id, "Đã huỷ");
                       }}
-                      className="px-2.5 py-1 rounded-lg border border-rose-300 text-rose-500 text-xs hover:bg-rose-50"
+                      className={`px-2.5 py-1 rounded-lg border text-xs transition-colors ${STATUS_THEME.DANGER.outlineBtnClass}`}
                     >
                       Huỷ & Hoàn kho
                     </button>
@@ -553,9 +473,9 @@ function StaffManagementPanel() {
                 </td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${s.status === "Đang hoạt động"
-                        ? "bg-emerald-500/10 text-emerald-600"
-                        : "bg-rose-500/10 text-rose-600"
+                    className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${s.status === "Đang hoạt động"
+                        ? STATUS_THEME.SUCCESS.badgeClass
+                        : STATUS_THEME.DANGER.badgeClass
                       }`}
                   >
                     {s.status}
@@ -569,12 +489,12 @@ function StaffManagementPanel() {
                   >
                     {s.status === "Đang hoạt động" ? (
                       <>
-                        <Lock className="w-3.5 h-3.5 text-rose-500" />
+                        <Lock className={`w-3.5 h-3.5 ${STATUS_THEME.DANGER.textColor}`} />
                         <span>Khóa</span>
                       </>
                     ) : (
                       <>
-                        <Unlock className="w-3.5 h-3.5 text-emerald-500" />
+                        <Unlock className={`w-3.5 h-3.5 ${STATUS_THEME.SUCCESS.textColor}`} />
                         <span>Mở khóa</span>
                       </>
                     )}
@@ -625,7 +545,7 @@ function DiscountsManagementPanel() {
               <span className="font-mono font-black text-sm px-2.5 py-1 rounded-lg bg-secondary text-secondary-foreground border border-border">
                 {d.code}
               </span>
-              <span className="text-xs text-emerald-600 font-semibold">{d.status}</span>
+              <span className={`text-xs font-semibold ${STATUS_THEME.SUCCESS.textColor}`}>{d.status}</span>
             </div>
             <div>
               <p className="font-bold text-foreground text-sm">{d.discount}</p>
@@ -727,11 +647,11 @@ function ReviewsModerationPanel() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-foreground text-sm">{r.product}</span>
-                <span className="text-xs text-amber-500 font-semibold">★ {r.rating}/5</span>
+                <span className={`text-xs font-semibold ${STATUS_THEME.WARNING.textColor}`}>★ {r.rating}/5</span>
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${r.status === "Hiển thị"
-                      ? "bg-emerald-500/10 text-emerald-600"
-                      : "bg-rose-500/10 text-rose-600 font-semibold"
+                  className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${r.status === "Hiển thị"
+                      ? STATUS_THEME.SUCCESS.badgeClass
+                      : STATUS_THEME.DANGER.badgeClass
                     }`}
                 >
                   {r.status}
