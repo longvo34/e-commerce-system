@@ -76,3 +76,52 @@ export interface PlaceOrderResponse {
 
 // GET /orders/my/{id}
 // Chưa xác nhận cấu trúc response thành công.
+
+export interface OrderItemDetail {
+  id: number;
+  orderId?: number;
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  product?: {
+    id: number;
+    productName?: string;
+    skuCode?: string;
+    imageUrl?: string;
+    price?: number;
+  };
+  [key: string]: unknown;
+}
+
+export interface StaffOrder {
+  id: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus | string;
+  shippingFee: number;
+  discountAmount: number;
+  totalAmount: number;
+  shippingAddress?: string;
+  paymentMethod?: PaymentMethod | string;
+  cancelReason?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  userId?: number;
+  user?: {
+    id: number;
+    fullName: string;
+    email: string;
+    phoneNumber?: string | null;
+  };
+  orderDetail?: OrderDetail;
+  orderDetails?: OrderItemDetail[];
+  items?: OrderItemDetail[];
+  [key: string]: unknown;
+}
+
+export interface UpdateOrderStatusPayload {
+  status: OrderStatus;
+}
+
+export interface CancelOrderByStaffPayload {
+  reason: string;
+}

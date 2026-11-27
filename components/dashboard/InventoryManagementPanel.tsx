@@ -348,14 +348,14 @@ export default function InventoryManagementPanel() {
               </thead>
               <tbody className="divide-y divide-border text-xs">
                 {loading ? (
-                  <tr>
+                  <tr key="stock-table-loading">
                     <td colSpan={6} className="py-12 text-center text-muted-foreground">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
                       Đang tải số liệu tồn kho...
                     </td>
                   </tr>
                 ) : filteredStocks.length === 0 ? (
-                  <tr>
+                  <tr key="stock-table-empty">
                     <td colSpan={6} className="py-12 text-center text-muted-foreground">
                       Không tìm thấy dữ liệu tồn kho phù hợp.
                     </td>
@@ -474,14 +474,14 @@ export default function InventoryManagementPanel() {
                 </thead>
                 <tbody className="divide-y divide-border text-xs">
                   {loading ? (
-                    <tr>
+                    <tr key="history-table-loading">
                       <td colSpan={7} className="py-12 text-center text-muted-foreground">
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
                         Đang tải lịch sử giao dịch kho...
                       </td>
                     </tr>
                   ) : filteredHistory.length === 0 ? (
-                    <tr>
+                    <tr key="history-table-empty">
                       <td colSpan={7} className="py-12 text-center text-muted-foreground">
                         Không có bản ghi giao dịch nào.
                       </td>
