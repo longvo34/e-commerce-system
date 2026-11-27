@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Eye,
   CheckCircle,
+  Check,
 } from "lucide-react";
 import {
   getProducts,
@@ -31,11 +32,7 @@ import { STATUS_THEME } from "@/constants";
 
 export default function ProductsManagementPanel() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 1, categoryName: "Điện thoại" },
-    { id: 2, categoryName: "Laptop & Máy tính" },
-    { id: 3, categoryName: "Phụ kiện công nghệ" },
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
@@ -53,12 +50,14 @@ export default function ProductsManagementPanel() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Danh mục được chọn (Hỗ trợ nhiều danh mục qua categoryIds)
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+
   // Form state
   const [formData, setFormData] = useState({
     productName: "",
     skuCode: "",
     price: "",
-    categoryId: "1",
     description: "",
     imageUrl: "",
   });
@@ -67,49 +66,6 @@ export default function ProductsManagementPanel() {
   const [imageModalProduct, setImageModalProduct] = useState<Product | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-
-  // Fallback data khi chưa có quyền Product Staff hoặc Backend chưa có dữ liệu
-  const mockFallbackProducts: Product[] = useMemo(
-    () => [
-      {
-        id: 1,
-        skuCode: "IP15P-256",
-        productName: "iPhone 15 Pro 256GB",
-        price: 29990000,
-        status: "ON_SALE",
-        categoryId: 1,
-        category: { id: 1, categoryName: "Điện thoại" },
-        imageUrl: "",
-        stock: 45,
-        description: "Màn hình 6.1 inch, chip A17 Pro",
-      },
-      {
-        id: 2,
-        skuCode: "SS-S24U-512",
-        productName: "Samsung Galaxy S24 Ultra 512GB",
-        price: 33990000,
-        status: "ON_SALE",
-        categoryId: 1,
-        category: { id: 1, categoryName: "Điện thoại" },
-        imageUrl: "",
-        stock: 20,
-        description: "Màn hình 6.8 inch, camera 200MP",
-      },
-      {
-        id: 3,
-        skuCode: "MAC-M3-16",
-        productName: "MacBook Air M3 16GB 512GB",
-        price: 32990000,
-        status: "DISCONTINUED",
-        categoryId: 2,
-        category: { id: 2, categoryName: "Laptop" },
-        imageUrl: "",
-        stock: 0,
-        description: "Mỏng nhẹ, pin 18 tiếng",
-      },
-    ],
-    []
-  );
 
   // Tải danh sách sản phẩm
   const fetchProductsList = useCallback(async () => {
@@ -120,30 +76,25 @@ export default function ProductsManagementPanel() {
         status: statusFilter,
         page,
         limit,
-      }).catch(() => null);
+      });
 
       if (res && Array.isArray(res.items)) {
         setProducts(res.items);
-        setTotal(res.total || res.items.length);
+        setTotal(res.total ?? res.items.length);
       } else {
-        // Dùng fallback mock data khi chưa kết nối được
-        let list = mockFallbackProducts;
-        if (search.trim()) {
-          list = list.filter((p) =>
-            p.productName.toLowerCase().includes(search.toLowerCase())
-          );
-        }
-        if (statusFilter !== "ALL") {
-          list = list.filter((p) => p.status === statusFilter);
-        }
-        setProducts(list);
-        setTotal(list.length);
+        setProducts([]);
+        setTotal(0);
       }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách sản phẩm";
+      setErrorMessage(msg);
+      setProducts([]);
+      setTotal(0);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [search, statusFilter, page, limit, mockFallbackProducts]);
+  }, [search, statusFilter, page, limit]);
 
   useEffect(() => {
     fetchProductsList();
@@ -166,14 +117,27 @@ export default function ProductsManagementPanel() {
     }
   }, [successMessage, errorMessage]);
 
+  // Chọn / bỏ chọn danh mục
+  const toggleCategory = (catId: number) => {
+    setSelectedCategoryIds((prev) => {
+      if (prev.includes(catId)) {
+        return prev.filter((id) => id !== catId);
+      } else {
+        return [...prev, catId];
+      }
+    });
+  };
+
   // Mở modal thêm mới
   const handleOpenAddModal = () => {
     setEditingProduct(null);
+    const activeCats = categories.filter((c) => c.status !== "INACTIVE");
+    const defaultCat = activeCats.length > 0 ? activeCats[0].id : categories[0]?.id;
+    setSelectedCategoryIds(defaultCat ? [defaultCat] : []);
     setFormData({
       productName: "",
       skuCode: "",
       price: "",
-      categoryId: "1",
       description: "",
       imageUrl: "",
     });
@@ -183,11 +147,20 @@ export default function ProductsManagementPanel() {
   // Mở modal sửa
   const handleOpenEditModal = (product: Product) => {
     setEditingProduct(product);
+    const existingCatIds: number[] =
+      Array.isArray(product.categories) && product.categories.length > 0
+        ? product.categories.map((c) => Number(c.id))
+        : product.categoryId
+        ? [Number(product.categoryId)]
+        : categories.length > 0
+        ? [categories[0].id]
+        : [];
+
+    setSelectedCategoryIds(Array.from(new Set(existingCatIds)));
     setFormData({
       productName: product.productName,
       skuCode: product.skuCode,
       price: String(product.price),
-      categoryId: String(product.categoryId || 1),
       description: product.description || "",
       imageUrl: product.imageUrl || "",
     });
@@ -200,28 +173,38 @@ export default function ProductsManagementPanel() {
     setSubmitting(true);
     setErrorMessage("");
 
+    const uniqueCatIds = Array.from(new Set(selectedCategoryIds.map(Number))).filter(
+      (id) => !isNaN(id) && id > 0
+    );
+
+    if (uniqueCatIds.length === 0) {
+      setErrorMessage("Sản phẩm phải thuộc ít nhất 1 danh mục. Vui lòng chọn danh mục bên dưới!");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       if (editingProduct) {
         // PATCH /products/{id}
         const payload: UpdateProductPayload = {
-          productName: formData.productName,
-          skuCode: formData.skuCode,
+          productName: formData.productName.trim(),
+          skuCode: formData.skuCode.trim(),
           price: Number(formData.price),
-          categoryId: Number(formData.categoryId),
-          description: formData.description,
-          imageUrl: formData.imageUrl,
+          categoryIds: uniqueCatIds,
+          description: formData.description?.trim() || undefined,
+          imageUrl: formData.imageUrl?.trim() || undefined,
         };
         await updateProduct(editingProduct.id, payload);
         setSuccessMessage(`Đã cập nhật sản phẩm "${formData.productName}"!`);
       } else {
         // POST /products
         const payload: CreateProductPayload = {
-          productName: formData.productName,
-          skuCode: formData.skuCode,
+          productName: formData.productName.trim(),
+          skuCode: formData.skuCode.trim(),
           price: Number(formData.price),
-          categoryId: Number(formData.categoryId),
-          description: formData.description,
-          imageUrl: formData.imageUrl,
+          categoryIds: uniqueCatIds,
+          description: formData.description?.trim() || undefined,
+          imageUrl: formData.imageUrl?.trim() || undefined,
         };
         await createProduct(payload);
         setSuccessMessage(`Đã tạo sản phẩm mới "${formData.productName}" thành công!`);
@@ -475,7 +458,22 @@ export default function ProductsManagementPanel() {
 
                       {/* Danh mục */}
                       <td className="px-5 py-3 text-muted-foreground">
-                        {p.category?.categoryName || `DM #${p.categoryId || 1}`}
+                        {Array.isArray(p.categories) && p.categories.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {p.categories.map((cat, catIdx) => (
+                              <span
+                                key={`prod-cat-${cat.id ?? catIdx}-${catIdx}`}
+                                className="inline-block px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted text-foreground border border-border"
+                              >
+                                {cat.categoryName}
+                              </span>
+                            ))}
+                          </div>
+                        ) : p.category?.categoryName ? (
+                          <span className="text-xs">{p.category.categoryName}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Chưa phân loại</span>
+                        )}
                       </td>
 
                       {/* Giá bán */}
@@ -619,18 +617,54 @@ export default function ProductsManagementPanel() {
               </div>
 
               <div>
-                <label className="block font-semibold mb-1">Danh mục sản phẩm (categoryId) *</label>
-                <select
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-3 py-2 bg-muted/50 rounded-xl border border-border focus:outline-hidden focus:ring-1 focus:ring-ring"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.categoryName} (#{c.id})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold">
+                    Danh mục sản phẩm (categoryIds) <span className="text-destructive">*</span>
+                  </label>
+                  <span className="text-[11px] text-muted-foreground">
+                    Đã chọn: {selectedCategoryIds.length} danh mục
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Bấm chọn ít nhất 1 danh mục (hỗ trợ gán nhiều danh mục theo quan hệ N-N):
+                </p>
+
+                {categories.length === 0 ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                    Chưa có danh mục nào trên hệ thống! Vui lòng tạo danh mục ở tab &quot;Danh mục sản phẩm&quot; trước.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto p-2.5 rounded-xl border border-border bg-muted/20">
+                    {categories.map((c, idx) => {
+                      const isSelected = selectedCategoryIds.includes(c.id);
+                      const isInactive = c.status === "INACTIVE";
+                      return (
+                        <button
+                          type="button"
+                          key={`cat-pill-${c.id ?? idx}-${idx}`}
+                          onClick={() => toggleCategory(c.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                              : isInactive
+                              ? "bg-background/50 border-dashed border-border text-muted-foreground hover:bg-muted opacity-70"
+                              : "bg-background border-border text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          <span>{c.categoryName}</span>
+                          <span
+                            className={`text-[10px] font-normal ${
+                              isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                            }`}
+                          >
+                            #{c.id} {isInactive ? "(Ngừng dùng)" : ""}
+                          </span>
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div>

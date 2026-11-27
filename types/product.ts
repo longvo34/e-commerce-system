@@ -13,6 +13,8 @@ export interface Product {
   imageUrl?: string;
   categoryId?: number;
   category?: Category;
+  categories?: Category[];
+  categoryIds?: number[];
   description?: string;
   stock?: number;
   rating?: number;
@@ -40,7 +42,8 @@ export interface CreateProductPayload {
   productName: string;
   skuCode: string;
   price: number;
-  categoryId: number;
+  categoryIds: number[];
+  categoryId?: number;
   description?: string;
   imageUrl?: string;
 }

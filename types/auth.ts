@@ -6,9 +6,61 @@ export interface RegisterPayload {
   address?: string;
 }
 
+export interface RegisterResponse {
+  message: string;
+  user?: {
+    id: number;
+    fullName: string;
+    email: string;
+    role: string;
+    emailVerifiedAt?: string | null;
+  };
+  devOtp?: string;
+}
+
+export interface VerifyEmailPayload {
+  email: string;
+  otp: string;
+}
+
+export interface ResendOtpPayload {
+  email: string;
+}
+
+export interface ResendOtpResponse {
+  message: string;
+  devOtp?: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  devOtp?: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
 export interface LoginPayload {
   email: string;
   password: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  user?: {
+    id: number;
+    fullName: string;
+    email: string;
+    role: string;
+    emailVerifiedAt?: string | null;
+  };
 }
 
 export type UserProfile = {

@@ -31,20 +31,6 @@ import {
 import { getProducts } from "@/services/products";
 import { INVENTORY_TRANSACTION_MAP, STATUS_THEME, NOTIFICATION_THEME } from "@/constants";
 
-// Mock data dự phòng khi gặp lỗi 403 (chưa có quyền INVENTORY_STAFF)
-const MOCK_STOCK: InventoryStock[] = [
-  { productId: 1, productName: "iPhone 15 Pro 256GB", skuCode: "IP15P-256", stock: 45, totalImport: 50, totalExport: 5, totalAdjustment: 0 },
-  { productId: 2, productName: "Samsung Galaxy S24 Ultra", skuCode: "SS-S24U-512", stock: 18, totalImport: 20, totalExport: 2, totalAdjustment: 0 },
-  { productId: 3, productName: "MacBook Air M3 16GB", skuCode: "MAC-M3-16", stock: 8, totalImport: 10, totalExport: 1, totalAdjustment: -1 },
-  { productId: 4, productName: "Bàn phím cơ không dây", skuCode: "KB-MECH-01", stock: 0, totalImport: 15, totalExport: 15, totalAdjustment: 0 },
-];
-
-const MOCK_HISTORY: InventoryHistoryItem[] = [
-  { id: "TX-101", productId: 1, productName: "iPhone 15 Pro 256GB", skuCode: "IP15P-256", type: "IMPORT", quantity: 50, reason: "Nhập hàng từ nhà cung cấp Apple VN", staffName: "Nguyễn Kho (ID: 2)", createdAt: "2026-11-20 10:30" },
-  { id: "TX-102", productId: 1, productName: "iPhone 15 Pro 256GB", skuCode: "IP15P-256", type: "EXPORT", quantity: 5, reason: "Xuất giao đơn hàng #ORD-9820", staffName: "Hệ thống tự động", createdAt: "2026-11-21 14:15" },
-  { id: "TX-103", productId: 3, productName: "MacBook Air M3 16GB", skuCode: "MAC-M3-16", type: "ADJUSTMENT", quantity: 1, reason: "Kiểm kê định kỳ, phát hiện 1 máy lỗi màn hình", staffName: "Trần Thủ Kho (ID: 5)", createdAt: "2026-11-22 09:00" },
-];
-
 export default function InventoryManagementPanel() {
   const [activeSubTab, setActiveSubTab] = useState<"stock" | "history">("stock");
   const [stocks, setStocks] = useState<InventoryStock[]>([]);
@@ -91,19 +77,15 @@ export default function InventoryManagementPanel() {
     setLoading(true);
     try {
       const data = await getAllStock();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setStocks(data);
       } else {
-        setStocks(MOCK_STOCK);
+        setStocks([]);
       }
     } catch (err: any) {
-      if (err?.response?.status === 403) {
-        showNotification(
-          "info",
-          "Tài khoản hiện tại chưa có role INVENTORY_STAFF. Đang hiển thị dữ liệu mẫu để bạn kiểm tra giao diện."
-        );
-      }
-      setStocks(MOCK_STOCK);
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải số liệu tồn kho";
+      showNotification("error", msg);
+      setStocks([]);
     } finally {
       setLoading(false);
     }
@@ -116,13 +98,15 @@ export default function InventoryManagementPanel() {
       const data = await getInventoryHistory({
         type: historyTypeFilter === "ALL" ? undefined : (historyTypeFilter as InventoryTransactionType),
       });
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setHistory(data);
       } else {
-        setHistory(MOCK_HISTORY);
+        setHistory([]);
       }
     } catch (err: any) {
-      setHistory(MOCK_HISTORY);
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải lịch sử giao dịch kho";
+      showNotification("error", msg);
+      setHistory([]);
     } finally {
       setLoading(false);
     }
@@ -377,20 +361,24 @@ export default function InventoryManagementPanel() {
                     </td>
                   </tr>
                 ) : (
-                  filteredStocks.map((s) => {
-                    const isOutOfStock = s.stock <= 0;
-                    const isLowStock = s.stock > 0 && s.stock <= 10;
+                  filteredStocks.map((s, idx) => {
+                    const prodId = s.productId ?? (s as any).id ?? idx;
+                    const itemKey = `stock-${prodId}-${idx}`;
+                    const isOutOfStock = (s.stock ?? 0) <= 0;
+                    const isLowStock = (s.stock ?? 0) > 0 && (s.stock ?? 0) <= 10;
+                    const productName = s.productName || (s as any).name || (s as any).product?.name || `Sản phẩm #${prodId}`;
+                    const sku = s.skuCode || (s as any).sku || "—";
 
                     return (
-                      <tr key={s.productId} className="hover:bg-muted/20 transition-colors">
+                      <tr key={itemKey} className="hover:bg-muted/20 transition-colors">
                         <td className="py-3.5 px-4">
                           <p className="font-semibold text-foreground">
-                            {s.productName || `Sản phẩm #${s.productId}`}
+                            {productName}
                           </p>
-                          <span className="text-[11px] text-muted-foreground">ID: #{s.productId}</span>
+                          <span className="text-[11px] text-muted-foreground">ID: #{prodId}</span>
                         </td>
                         <td className="py-3.5 px-4 font-mono text-muted-foreground">
-                          {s.skuCode || "—"}
+                          {sku}
                         </td>
                         <td className="py-3.5 px-4 text-center">
                           <span
@@ -402,7 +390,7 @@ export default function InventoryManagementPanel() {
                                 : STATUS_THEME.SUCCESS.badgeClass
                             }`}
                           >
-                            {s.stock} cái
+                            {s.stock ?? 0} cái
                           </span>
                         </td>
                         <td className={`py-3.5 px-4 text-center font-medium ${STATUS_THEME.SUCCESS.textColor}`}>
@@ -414,21 +402,21 @@ export default function InventoryManagementPanel() {
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => handleOpenModal("import", s.productId)}
+                              onClick={() => handleOpenModal("import", Number(prodId))}
                               className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors ${INVENTORY_TRANSACTION_MAP.IMPORT.outlineBtnClass}`}
                               title="Nhập thêm hàng"
                             >
                               + Nhập
                             </button>
                             <button
-                              onClick={() => handleOpenModal("export", s.productId)}
+                              onClick={() => handleOpenModal("export", Number(prodId))}
                               className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors ${INVENTORY_TRANSACTION_MAP.EXPORT.outlineBtnClass}`}
                               title="Xuất bớt hàng"
                             >
                               - Xuất
                             </button>
                             <button
-                              onClick={() => handleOpenModal("adjust", s.productId)}
+                              onClick={() => handleOpenModal("adjust", Number(prodId))}
                               className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors ${INVENTORY_TRANSACTION_MAP.ADJUSTMENT.outlineBtnClass}`}
                               title="Kiểm kê điều chỉnh"
                             >
@@ -507,7 +495,7 @@ export default function InventoryManagementPanel() {
                       };
 
                       return (
-                        <tr key={h.id || idx} className="hover:bg-muted/20 transition-colors">
+                        <tr key={`history-${h.id ?? idx}-${idx}`} className="hover:bg-muted/20 transition-colors">
                           <td className="py-3 px-4 font-mono text-[11px] text-muted-foreground">
                             #{h.id || idx + 1}
                           </td>
@@ -596,17 +584,20 @@ export default function InventoryManagementPanel() {
                   className="w-full mt-1.5 px-3 py-2 text-xs rounded-xl bg-background border border-border focus:ring-1 focus:ring-primary focus:outline-hidden"
                 >
                   {productsList.length > 0 ? (
-                    productsList.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.productName} ({p.skuCode}) - ID #{p.id}
+                    productsList.map((p, idx) => (
+                      <option key={`prod-opt-${p.id ?? idx}`} value={p.id}>
+                        {p.productName} ({p.skuCode || "—"}) - ID #{p.id}
                       </option>
                     ))
                   ) : (
-                    stocks.map((s) => (
-                      <option key={s.productId} value={s.productId}>
-                        {s.productName || `Sản phẩm #${s.productId}`} - ID #{s.productId}
-                      </option>
-                    ))
+                    stocks.map((s, idx) => {
+                      const pId = s.productId ?? (s as any).id ?? idx;
+                      return (
+                        <option key={`stock-opt-${pId}-${idx}`} value={pId}>
+                          {s.productName || (s as any).name || `Sản phẩm #${pId}`} - ID #{pId}
+                        </option>
+                      );
+                    })
                   )}
                 </select>
               </div>

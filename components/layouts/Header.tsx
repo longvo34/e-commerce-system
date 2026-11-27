@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, User, ShoppingBag, Menu, X, LogOut } from "lucide-react";
+import { Search, User, ShoppingBag, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 
 interface HeaderProps {
   cartItemCount?: number;
@@ -15,8 +15,22 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Lấy role của user từ localStorage khi mount
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        setUserRole(parsed.role || null);
+      }
+    } catch {
+      setUserRole(null);
+    }
+  }, []);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -45,13 +59,16 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
     setIsProfileMenuOpen(false);
     setIsMobileMenuOpen(false);
 
-    // 1. Xóa Cookie token (cho hết hạn về quá khứ)
+    // 1. Xóa Cookie token và role (cho hết hạn về quá khứ)
     document.cookie =
       "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+    document.cookie =
+      "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
 
     // 2. Xóa localStorage
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    setUserRole(null);
 
     // 3. Chuyển về trang đăng nhập và làm mới dữ liệu
     router.push("/login");
@@ -115,7 +132,46 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
 
               {/* Profile Dropdown Menu */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-popover text-popover-foreground shadow-lg py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-popover text-popover-foreground shadow-lg py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                  {userRole === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-muted transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>Trang Quản trị</span>
+                    </Link>
+                  )}
+
+                  {userRole === "PRODUCT_STAFF" && (
+                    <Link
+                      href="/staff/product"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-muted transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span>Quản lý sản phẩm</span>
+                    </Link>
+                  )}
+
+                  {userRole === "INVENTORY_STAFF" && (
+                    <Link
+                      href="/staff/inventory"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-muted transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <span>Quản lý kho</span>
+                    </Link>
+                  )}
+
+                  {(userRole === "ADMIN" ||
+                    userRole === "PRODUCT_STAFF" ||
+                    userRole === "INVENTORY_STAFF") && (
+                    <div className="my-1 border-t border-border" />
+                  )}
+
                   <Link
                     href="/profile"
                     onClick={() => setIsProfileMenuOpen(false)}

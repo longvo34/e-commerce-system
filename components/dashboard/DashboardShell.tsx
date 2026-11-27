@@ -6,6 +6,7 @@ import ReportsOverview from "./ReportsOverview";
 import ProductsManagementPanel from "./ProductsManagementPanel";
 import CategoriesManagementPanel from "./CategoriesManagementPanel";
 import InventoryManagementPanel from "./InventoryManagementPanel";
+import StaffManagementPanel from "./StaffManagementPanel";
 import { STATUS_THEME } from "@/constants";
 import {
   LayoutDashboard,
@@ -399,106 +400,6 @@ function OrdersProcessingPanel() {
                       Huỷ & Hoàn kho
                     </button>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// =========================================================================
-// 6. QUẢN LÝ NHÂN VIÊN & PHÂN QUYỀN (Admin only)
-// =========================================================================
-function StaffManagementPanel() {
-  const [staffList, setStaffList] = useState([
-    { id: 1, name: "Trần Văn Bình", email: "binh.tv@abcstore.com", role: "Product Staff", status: "Đang hoạt động", assignedAt: "01/10/2026" },
-    { id: 2, name: "Lê Hoàng Kho", email: "kho.lh@abcstore.com", role: "Inventory Staff", status: "Đang hoạt động", assignedAt: "05/10/2026" },
-    { id: 3, name: "Nguyễn Thị Thảo", email: "thao.nt@abcstore.com", role: "Product Staff", status: "Đã khóa", assignedAt: "12/09/2026" },
-  ]);
-
-  const toggleLock = (id: number) => {
-    setStaffList((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? { ...s, status: s.status === "Đang hoạt động" ? "Đã khóa" : "Đang hoạt động" }
-          : s
-      )
-    );
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-base text-foreground">
-            Quản lý tài khoản nhân viên & Phân quyền (Admin)
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Admin phân quyền nhân viên theo vai trò: Product Staff hoặc Inventory Staff.
-          </p>
-        </div>
-        <button
-          onClick={() => alert("Mở form tạo tài khoản nhân viên & gán vai trò")}
-          className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90"
-        >
-          + Thêm nhân viên
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase font-semibold text-[11px]">
-            <tr>
-              <th className="px-5 py-3">Họ và tên</th>
-              <th className="px-5 py-3">Email đăng nhập</th>
-              <th className="px-5 py-3">Vai trò phân quyền</th>
-              <th className="px-5 py-3">Trạng thái</th>
-              <th className="px-5 py-3">Ngày cấp quyền</th>
-              <th className="px-5 py-3 text-right">Khóa / Mở khóa</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {staffList.map((s) => (
-              <tr key={s.id} className="hover:bg-muted/40 transition-colors">
-                <td className="px-5 py-3.5 font-bold text-foreground">{s.name}</td>
-                <td className="px-5 py-3.5 text-muted-foreground">{s.email}</td>
-                <td className="px-5 py-3.5 font-semibold text-foreground">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs">
-                    <Shield className="w-3 h-3 text-primary" />
-                    {s.role}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span
-                    className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${s.status === "Đang hoạt động"
-                        ? STATUS_THEME.SUCCESS.badgeClass
-                        : STATUS_THEME.DANGER.badgeClass
-                      }`}
-                  >
-                    {s.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 text-xs text-muted-foreground">{s.assignedAt}</td>
-                <td className="px-5 py-3.5 text-right">
-                  <button
-                    onClick={() => toggleLock(s.id)}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-border text-xs font-medium hover:bg-muted"
-                  >
-                    {s.status === "Đang hoạt động" ? (
-                      <>
-                        <Lock className={`w-3.5 h-3.5 ${STATUS_THEME.DANGER.textColor}`} />
-                        <span>Khóa</span>
-                      </>
-                    ) : (
-                      <>
-                        <Unlock className={`w-3.5 h-3.5 ${STATUS_THEME.SUCCESS.textColor}`} />
-                        <span>Mở khóa</span>
-                      </>
-                    )}
-                  </button>
                 </td>
               </tr>
             ))}

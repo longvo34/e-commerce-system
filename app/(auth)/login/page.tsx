@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, Suspense, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/services/auth";
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,17 +32,35 @@ export default function Login() {
       setLoading(true);
       const res = await login({ email, password });
 
+      // Lưu accessToken và role vào Cookie
       document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400; SameSite=Lax`;
+      if (res.user?.role) {
+        document.cookie = `role=${res.user.role}; path=/; max-age=86400; SameSite=Lax`;
+      }
 
-
+      // Lưu vào localStorage
       localStorage.setItem("accessToken", res.accessToken);
       if (res.user) {
         localStorage.setItem("user", JSON.stringify(res.user));
       }
 
+      // Chuyển hướng theo vai trò (Role-based redirect)
+      let targetPath = "/";
+      const userRole = res.user?.role;
+
+      if (userRole === "ADMIN") {
+        targetPath = "/admin";
+      } else if (userRole === "PRODUCT_STAFF") {
+        targetPath = "/staff/product";
+      } else if (userRole === "INVENTORY_STAFF") {
+        targetPath = "/staff/inventory";
+      } else {
+        targetPath = searchParams.get("redirect") || "/";
+      }
+
       setMessage("Đăng nhập thành công! Đang chuyển hướng...");
       setTimeout(() => {
-        router.push("/");
+        router.push(targetPath);
         router.refresh();
       }, 1000);
     } catch (err: unknown) {
@@ -88,12 +107,20 @@ export default function Login() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium text-foreground"
-            >
-              Mật khẩu
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-foreground"
+              >
+                Mật khẩu
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
 
             <div className="relative">
               <input
@@ -156,5 +183,13 @@ export default function Login() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-muted-foreground text-sm">Đang tải...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -24,7 +24,10 @@ export async function apiFetch<T = any>(
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message || "Có lỗi xảy ra khi gọi API");
+    const errorMsg = Array.isArray(error.message)
+      ? error.message.join("; ")
+      : error.message || "Có lỗi xảy ra khi gọi API";
+    throw new Error(errorMsg);
   }
 
   const text = await res.text();
