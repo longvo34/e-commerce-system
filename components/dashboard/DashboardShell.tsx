@@ -8,6 +8,7 @@ import CategoriesManagementPanel from "./CategoriesManagementPanel";
 import InventoryManagementPanel from "./InventoryManagementPanel";
 import StaffManagementPanel from "./StaffManagementPanel";
 import OrdersProcessingPanel from "./OrdersProcessingPanel";
+import VouchersManagementPanel from "./VouchersManagementPanel";
 import { STATUS_THEME } from "@/constants";
 import {
   LayoutDashboard,
@@ -302,7 +303,7 @@ export default function DashboardShell({
           {activeTab === "inventory" && <InventoryManagementPanel />}
           {activeTab === "orders" && <OrdersProcessingPanel />}
           {activeTab === "staff" && <StaffManagementPanel />}
-          {activeTab === "discounts" && <DiscountsManagementPanel />}
+          {activeTab === "discounts" && <VouchersManagementPanel />}
           {activeTab === "shipping" && <ShippingConfigPanel />}
           {activeTab === "reviews" && <ReviewsModerationPanel />}
         </main>
@@ -314,60 +315,19 @@ export default function DashboardShell({
 
 
 
-// =========================================================================
-// 7. QUẢN LÝ CHƯƠNG TRÌNH GIẢM GIÁ (Admin only)
-// =========================================================================
-function DiscountsManagementPanel() {
-  const discounts = [
-    { code: "WELCOMEABC", discount: "Giảm 10%", minOrder: "Đơn từ 200.000₫", expiry: "31/12/2026", status: "Đang kích hoạt" },
-    { code: "FREESHIP50", discount: "Miễn phí ship (Tối đa 50k)", minOrder: "Đơn từ 500.000₫", expiry: "30/11/2026", status: "Đang kích hoạt" },
-    { code: "BLACKFRIDAY", discount: "Giảm 30%", minOrder: "Đơn từ 1.000.000₫", expiry: "28/11/2026", status: "Chưa kích hoạt" },
-  ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-base text-foreground">
-            Chương trình giảm giá & Mã khuyến mãi (Admin)
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Cấu hình mã giảm giá, thời hạn áp dụng, giá trị giảm và điều kiện tối thiểu.
-          </p>
-        </div>
-        <button
-          onClick={() => alert("Mở form tạo mã giảm giá mới")}
-          className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90"
-        >
-          + Tạo mã giảm giá
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {discounts.map((d) => (
-          <div key={d.code} className="rounded-2xl border border-border bg-card p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-mono font-black text-sm px-2.5 py-1 rounded-lg bg-secondary text-secondary-foreground border border-border">
-                {d.code}
-              </span>
-              <span className={`text-xs font-semibold ${STATUS_THEME.SUCCESS.textColor}`}>{d.status}</span>
-            </div>
-            <div>
-              <p className="font-bold text-foreground text-sm">{d.discount}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Điều kiện: {d.minOrder}</p>
-              <p className="text-xs text-muted-foreground">Hạn dùng: {d.expiry}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // 8. CẤU HÌNH PHÍ VẬN CHUYỂN (Admin only)
 // =========================================================================
 function ShippingConfigPanel() {
+  const [standardFee, setStandardFee] = useState("");
+  const [freeShipThreshold, setFreeShipThreshold] = useState("");
+
+  const handleSave = () => {
+    alert("Chức năng chưa có.");
+  };
+
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -386,7 +346,9 @@ function ShippingConfigPanel() {
           </label>
           <input
             type="text"
-            defaultValue="30.000₫"
+            value={standardFee}
+            onChange={(e) => setStandardFee(e.target.value)}
+            placeholder="Chưa cấu hình (Ví dụ: 30000)"
             className="w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm text-foreground focus:ring-1 focus:ring-ring"
           />
         </div>
@@ -397,13 +359,15 @@ function ShippingConfigPanel() {
           </label>
           <input
             type="text"
-            defaultValue="500.000₫"
+            value={freeShipThreshold}
+            onChange={(e) => setFreeShipThreshold(e.target.value)}
+            placeholder="Chưa cấu hình (Ví dụ: 500000)"
             className="w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm text-foreground focus:ring-1 focus:ring-ring"
           />
         </div>
 
         <button
-          onClick={() => alert("Đã lưu cấu hình biểu phí vận chuyển!")}
+          onClick={handleSave}
           className="rounded-xl bg-primary text-primary-foreground px-6 py-2.5 text-xs font-semibold hover:bg-primary/90"
         >
           Lưu cấu hình
@@ -417,10 +381,16 @@ function ShippingConfigPanel() {
 // 9. KIỂM DUYỆT ĐÁNH GIÁ (Admin only)
 // =========================================================================
 function ReviewsModerationPanel() {
-  const [reviews, setReviews] = useState([
-    { id: 1, product: "Áo Thun Cotton Form Rộng", customer: "Lê Văn C", rating: 5, comment: "Vải dày dặn, mặc mát và form rất chuẩn, sẽ ủng hộ tiếp!", status: "Hiển thị" },
-    { id: 2, product: "Quần Jeans Slimfit", customer: "Báo cáo nặc danh", rating: 1, comment: "Hàng giả mạo lừa đảo mọi người đừng mua abcxyz...", status: "Bị báo cáo vi phạm" },
-  ]);
+  const [reviews, setReviews] = useState<
+    Array<{
+      id: number;
+      product: string;
+      customer: string;
+      rating: number;
+      comment: string;
+      status: string;
+    }>
+  >([]);
 
   const toggleReviewStatus = (id: number) => {
     setReviews((prev) =>
@@ -443,38 +413,50 @@ function ReviewsModerationPanel() {
         </p>
       </div>
 
-      <div className="space-y-3">
-        {reviews.map((r) => (
-          <div
-            key={r.id}
-            className="rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-foreground text-sm">{r.product}</span>
-                <span className={`text-xs font-semibold ${STATUS_THEME.WARNING.textColor}`}>★ {r.rating}/5</span>
-                <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${r.status === "Hiển thị"
+      {reviews.length === 0 ? (
+        <div className="py-16 text-center rounded-2xl border border-dashed border-border bg-card/50">
+          <MessageSquareWarning className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+          <p className="text-sm font-medium text-muted-foreground">
+            Không có đánh giá nào cần kiểm duyệt.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Các đánh giá từ người dùng sẽ hiển thị tại đây khi hệ thống nhận được dữ liệu.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {reviews.map((r) => (
+            <div
+              key={r.id}
+              className="rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-foreground text-sm">{r.product}</span>
+                  <span className={`text-xs font-semibold ${STATUS_THEME.WARNING.textColor}`}>★ {r.rating}/5</span>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${r.status === "Hiển thị"
                       ? STATUS_THEME.SUCCESS.badgeClass
                       : STATUS_THEME.DANGER.badgeClass
-                    }`}
-                >
-                  {r.status}
-                </span>
+                      }`}
+                  >
+                    {r.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Người gửi: {r.customer}</p>
+                <p className="text-sm text-foreground mt-2 italic">&ldquo;{r.comment}&rdquo;</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Người gửi: {r.customer}</p>
-              <p className="text-sm text-foreground mt-2 italic">&ldquo;{r.comment}&rdquo;</p>
-            </div>
 
-            <button
-              onClick={() => toggleReviewStatus(r.id)}
-              className="px-4 py-2 rounded-xl border border-border text-xs font-semibold hover:bg-muted flex-shrink-0"
-            >
-              {r.status === "Hiển thị" ? "Ẩn đánh giá này" : "Khôi phục hiển thị"}
-            </button>
-          </div>
-        ))}
-      </div>
+              <button
+                onClick={() => toggleReviewStatus(r.id)}
+                className="px-4 py-2 rounded-xl border border-border text-xs font-semibold hover:bg-muted flex-shrink-0"
+              >
+                {r.status === "Hiển thị" ? "Ẩn đánh giá này" : "Khôi phục hiển thị"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
