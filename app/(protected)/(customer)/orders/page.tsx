@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Package, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { getMyOrders } from "@/services/orders";
 
 type OrderStatus =
   | "Pending"
@@ -31,58 +32,7 @@ type Order = {
   items: OrderItem[];
 };
 
-// Mock data - thay bằng API khi có backend
-const orders: Order[] = [
-  {
-    id: "ORD-1004",
-    createdAt: "14/11/2026",
-    status: "Pending",
-    shippingAddress: "TP. Hồ Chí Minh",
-    paymentMethod: "COD",
-    paymentStatus: "Chưa thanh toán",
-    shippingFee: 30000,
-    discountAmount: 30000,
-    totalAmount: 350000,
-    items: [{ id: 1, name: "Áo thun basic", quantity: 2, unitPrice: 175000 }],
-  },
-  {
-    id: "ORD-1003",
-    createdAt: "12/11/2026",
-    status: "Shipping",
-    shippingAddress: "TP. Hồ Chí Minh",
-    paymentMethod: "COD",
-    paymentStatus: "Chưa thanh toán",
-    shippingFee: 30000,
-    discountAmount: 0,
-    totalAmount: 480000,
-    items: [{ id: 2, name: "Quần jeans", quantity: 1, unitPrice: 450000 }],
-  },
-  {
-    id: "ORD-1002",
-    createdAt: "10/11/2026",
-    status: "Delivered",
-    shippingAddress: "TP. Hồ Chí Minh",
-    paymentMethod: "COD",
-    paymentStatus: "Đã thanh toán",
-    shippingFee: 20000,
-    discountAmount: 50000,
-    totalAmount: 620000,
-    items: [{ id: 3, name: "Giày sneaker", quantity: 1, unitPrice: 650000 }],
-  },
-  {
-    id: "ORD-1001",
-    createdAt: "08/11/2026",
-    status: "Cancelled",
-    shippingAddress: "TP. Hồ Chí Minh",
-    paymentMethod: "COD",
-    paymentStatus: "Chưa thanh toán",
-    shippingFee: 30000,
-    discountAmount: 0,
-    totalAmount: 350000,
-    cancelReason: "Khách hàng thay đổi nhu cầu",
-    items: [{ id: 4, name: "Balo", quantity: 1, unitPrice: 320000 }],
-  },
-];
+// Mock data - deleted
 
 const statusLabels: Record<OrderStatus, string> = {
   Pending: "Chờ xác nhận",
@@ -114,6 +64,57 @@ export default function OrderHistoryPage() {
   const [filter, setFilter] = useState<Filter>("All");
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // GET /orders/my
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrders() {
+      try {
+        const data = await getMyOrders();
+
+        if (cancelled) return;
+
+        if (!Array.isArray(data)) {
+          setError("Response danh sách đơn hàng không hợp lệ.");
+          return;
+        }
+
+        if (data.length > 0) {
+          // Chưa có schema Order thực tế.
+          // Không ép unknown[] thành Order[].
+          setError(
+            "Đã nhận được đơn hàng, nhưng cần xác nhận cấu trúc dữ liệu từ backend.",
+          );
+          return;
+        }
+
+        setOrders([]);
+      } catch (err) {
+        if (cancelled) return;
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Không thể tải lịch sử đơn hàng.",
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadOrders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const filteredOrders = useMemo(() => {
     const keyword = search.toLowerCase().trim();
 
@@ -126,7 +127,7 @@ export default function OrderHistoryPage() {
 
       return statusMatch && searchMatch;
     });
-  }, [search, filter]);
+  }, [search, filter, orders]);
 
   return (
     <div className="bg-background px-4 py-10 text-foreground">
@@ -171,136 +172,163 @@ export default function OrderHistoryPage() {
         <p className="mb-4 text-sm text-muted-foreground">
           {filteredOrders.length} đơn hàng
         </p>
+        {loading && (
+          <div
+            role="status"
+            className="rounded-xl border border-border bg-card p-8 text-center"
+          >
+            Đang tải đơn hàng...
+          </div>
+        )}
 
+        {!loading && error && (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/30 bg-card p-8 text-center text-destructive"
+          >
+            {error}
+          </div>
+        )}
         <div className="space-y-5">
-          {filteredOrders.map((order) => {
-            const isExpanded = expanded === order.id;
+          {!loading &&
+            !error &&
+            filteredOrders.map((order) => {
+              const isExpanded = expanded === order.id;
 
-            const subtotal = order.items.reduce(
-              (sum, item) => sum + item.unitPrice * item.quantity,
-              0,
-            );
+              const subtotal = order.items.reduce(
+                (sum, item) => sum + item.unitPrice * item.quantity,
+                0,
+              );
 
-            return (
-              <article
-                key={order.id}
-                className="overflow-hidden rounded-xl border border-border bg-card"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
-                  <div>
-                    <h2 className="font-semibold">#{order.id}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {order.createdAt}
-                    </p>
+              return (
+                <article
+                  key={order.id}
+                  className="overflow-hidden rounded-xl border border-border bg-card"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+                    <div>
+                      <h2 className="font-semibold">#{order.id}</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {order.createdAt}
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground">
+                      {statusLabels[order.status]}
+                    </span>
                   </div>
 
-                  <span className="rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground">
-                    {statusLabels[order.status]}
-                  </span>
-                </div>
+                  <div className="space-y-4 p-5">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                          <Package className="text-secondary-foreground" />
+                        </div>
 
-                <div className="space-y-4 p-5">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4">
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                        <Package className="text-secondary-foreground" />
-                      </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Số lượng: {item.quantity}
+                          </p>
+                        </div>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Số lượng: {item.quantity}
+                        <p className="text-sm font-semibold">
+                          {currency(item.unitPrice * item.quantity)}
                         </p>
                       </div>
-
-                      <p className="text-sm font-semibold">
-                        {currency(item.unitPrice * item.quantity)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-5">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      Tổng thanh toán
-                    </p>
-                    <p className="text-lg font-bold">
-                      {currency(order.totalAmount)}
-                    </p>
+                    ))}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setExpanded(isExpanded ? null : order.id)}
-                    aria-expanded={isExpanded}
-                    className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
-                  >
-                    {isExpanded ? "Thu gọn" : "Xem chi tiết"}
-                    {isExpanded ? (
-                      <ChevronUp size={18} />
-                    ) : (
-                      <ChevronDown size={18} />
-                    )}
-                  </button>
-                </div>
-
-                {isExpanded && (
-                  <div className="space-y-3 border-t border-border bg-muted/30 p-5 text-sm">
-                    <h3 className="font-semibold">Chi tiết đơn hàng</h3>
-
-                    <p>Địa chỉ: {order.shippingAddress}</p>
-                    <p>Phương thức thanh toán: {order.paymentMethod}</p>
-                    <p>Trạng thái thanh toán: {order.paymentStatus}</p>
-
-                    <div className="space-y-2 border-t border-border pt-3">
-                      <div className="flex justify-between">
-                        <span>Tiền hàng</span>
-                        <span>{currency(subtotal)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Phí vận chuyển</span>
-                        <span>{currency(order.shippingFee)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Giảm giá</span>
-                        <span>-{currency(order.discountAmount)}</span>
-                      </div>
-                      <div className="flex justify-between border-t border-border pt-3 font-bold">
-                        <span>Tổng thanh toán</span>
-                        <span>{currency(order.totalAmount)}</span>
-                      </div>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-5">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Tổng thanh toán
+                      </p>
+                      <p className="text-lg font-bold">
+                        {currency(order.totalAmount)}
+                      </p>
                     </div>
 
-                    {order.cancelReason && (
-                      <p className="text-muted-foreground">
-                        Lý do hủy: {order.cancelReason}
-                      </p>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setExpanded(isExpanded ? null : order.id)}
+                      aria-expanded={isExpanded}
+                      className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
+                    >
+                      {isExpanded ? "Thu gọn" : "Xem chi tiết"}
+                      {isExpanded ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </button>
                   </div>
-                )}
-              </article>
-            );
-          })}
+
+                  {isExpanded && (
+                    <div className="space-y-3 border-t border-border bg-muted/30 p-5 text-sm">
+                      <h3 className="font-semibold">Chi tiết đơn hàng</h3>
+
+                      <p>Địa chỉ: {order.shippingAddress}</p>
+                      <p>Phương thức thanh toán: {order.paymentMethod}</p>
+                      <p>Trạng thái thanh toán: {order.paymentStatus}</p>
+
+                      <div className="space-y-2 border-t border-border pt-3">
+                        <div className="flex justify-between">
+                          <span>Tiền hàng</span>
+                          <span>{currency(subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Phí vận chuyển</span>
+                          <span>{currency(order.shippingFee)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Giảm giá</span>
+                          <span>-{currency(order.discountAmount)}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-border pt-3 font-bold">
+                          <span>Tổng thanh toán</span>
+                          <span>{currency(order.totalAmount)}</span>
+                        </div>
+                      </div>
+
+                      {order.cancelReason && (
+                        <p className="text-muted-foreground">
+                          Lý do hủy: {order.cancelReason}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
         </div>
 
-        {filteredOrders.length === 0 && (
+        {!loading && !error && filteredOrders.length === 0 && (
           <div className="rounded-xl border border-border bg-card p-10 text-center">
             <Package className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-            <p className="font-medium">Không tìm thấy đơn hàng</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Hãy thử tìm kiếm hoặc chọn trạng thái khác.
+            <p className="font-medium">
+              {orders.length === 0
+                ? "Bạn chưa có đơn hàng nào"
+                : "Không tìm thấy đơn hàng"}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setFilter("All");
-              }}
-              className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground"
-            >
-              Xóa bộ lọc
-            </button>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              {orders.length === 0
+                ? "Các đơn hàng sau khi đặt sẽ xuất hiện tại đây."
+                : "Hãy thử tìm kiếm hoặc chọn trạng thái khác."}
+            </p>
+            {orders.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setFilter("All");
+                }}
+                className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground"
+              >
+                Xóa bộ lọc
+              </button>
+            )}
           </div>
         )}
       </div>
