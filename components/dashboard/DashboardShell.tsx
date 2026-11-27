@@ -7,6 +7,7 @@ import ProductsManagementPanel from "./ProductsManagementPanel";
 import CategoriesManagementPanel from "./CategoriesManagementPanel";
 import InventoryManagementPanel from "./InventoryManagementPanel";
 import StaffManagementPanel from "./StaffManagementPanel";
+import OrdersProcessingPanel from "./OrdersProcessingPanel";
 import { STATUS_THEME } from "@/constants";
 import {
   LayoutDashboard,
@@ -311,104 +312,7 @@ export default function DashboardShell({
 }
 
 
-// =========================================================================
-// 5. XỬ LÝ ĐƠN HÀNG (Inventory Staff & Admin)
-// =========================================================================
-function OrdersProcessingPanel() {
-  const [orders, setOrders] = useState([
-    { id: "ORD-9821", customer: "Nguyễn Văn An", total: "1.250.000₫", status: "Chờ xác nhận", address: "123 Đường ABC, Quận 1, TP. HCM", payment: "Đã thanh toán" },
-    { id: "ORD-9820", customer: "Trần Thị Mai", total: "680.000₫", status: "Đang chuẩn bị", address: "456 Lê Lợi, Đà Nẵng", payment: "COD" },
-    { id: "ORD-9819", customer: "Lê Hoàng Long", total: "2.400.000₫", status: "Đang giao", address: "789 Phố Huế, Hà Nội", payment: "Đã thanh toán" },
-    { id: "ORD-9818", customer: "Phạm Thùy Linh", total: "450.000₫", status: "Đã huỷ", address: "Cầu Giấy, Hà Nội", payment: "Hoàn kho thành công" },
-  ]);
 
-  const updateStatus = (orderId: string, nextStatus: string) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
-    );
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="font-bold text-base text-foreground">
-          Quy trình xử lý đơn hàng (UC04 - Inventory Staff)
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Tiếp nhận đơn ➔ Đóng gói chuẩn bị ➔ Bàn giao shipper giao hàng ➔ Xác nhận đã giao (hoặc Huỷ & Hoàn kho).
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase font-semibold text-[11px]">
-            <tr>
-              <th className="px-5 py-3">Mã đơn</th>
-              <th className="px-5 py-3">Khách hàng & Địa chỉ</th>
-              <th className="px-5 py-3">Tổng tiền</th>
-              <th className="px-5 py-3">Trạng thái</th>
-              <th className="px-5 py-3 text-right">Thao tác quy trình</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {orders.map((o) => (
-              <tr key={o.id} className="hover:bg-muted/40 transition-colors">
-                <td className="px-5 py-3.5 font-bold font-mono text-foreground">{o.id}</td>
-                <td className="px-5 py-3.5">
-                  <p className="font-semibold text-foreground">{o.customer}</p>
-                  <p className="text-xs text-muted-foreground truncate max-w-xs">{o.address}</p>
-                </td>
-                <td className="px-5 py-3.5 font-bold text-foreground">{o.total}</td>
-                <td className="px-5 py-3.5">
-                  <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
-                    {o.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 text-right space-x-1.5">
-                  {o.status === "Chờ xác nhận" && (
-                    <button
-                      onClick={() => updateStatus(o.id, "Đang chuẩn bị")}
-                      className="px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90"
-                    >
-                      Tiếp nhận đóng gói
-                    </button>
-                  )}
-                  {o.status === "Đang chuẩn bị" && (
-                    <button
-                      onClick={() => updateStatus(o.id, "Đang giao")}
-                      className="px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90"
-                    >
-                      Bàn giao shipper
-                    </button>
-                  )}
-                  {o.status === "Đang giao" && (
-                    <button
-                      onClick={() => updateStatus(o.id, "Đã giao")}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${STATUS_THEME.SUCCESS.btnClass}`}
-                    >
-                      Xác nhận đã giao
-                    </button>
-                  )}
-                  {o.status !== "Đã giao" && o.status !== "Đã huỷ" && (
-                    <button
-                      onClick={() => {
-                        const reason = prompt("Nhập lý do huỷ đơn hàng & hoàn kho:");
-                        if (reason) updateStatus(o.id, "Đã huỷ");
-                      }}
-                      className={`px-2.5 py-1 rounded-lg border text-xs transition-colors ${STATUS_THEME.DANGER.outlineBtnClass}`}
-                    >
-                      Huỷ & Hoàn kho
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // 7. QUẢN LÝ CHƯƠNG TRÌNH GIẢM GIÁ (Admin only)
