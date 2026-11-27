@@ -1,3 +1,4 @@
 export * from "./register.service";
 export * from "./login.service";
 export * from "./profile.service";
+export * from "./forgot-password.service";

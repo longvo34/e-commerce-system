@@ -6,3 +6,4 @@ export * from "./product";
 export * from "./inventory";
 export * from "./order";
 export * from "./voucher";
+export * from "./admin";

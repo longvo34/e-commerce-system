@@ -33,31 +33,18 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
 
   // Dữ liệu từ 3 API
   const [ordersStats, setOrdersStats] = useState<OrdersCountByStatus>({
-    PENDING: 3,
-    PREPARING: 1,
-    SHIPPING: 2,
-    DELIVERED: 12,
-    CANCELLED: 1,
+    PENDING: 0,
+    PREPARING: 0,
+    SHIPPING: 0,
+    DELIVERED: 0,
+    CANCELLED: 0,
   });
 
-  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([
-    { id: 1, sku: "SP01", name: "Áo Thun Cotton Form Rộng", stock: 5, price: 250000, category: "Áo thun" },
-    { id: 2, sku: "SP02", name: "Quần Jeans Slimfit", stock: 2, price: 480000, category: "Quần jeans" },
-    { id: 3, sku: "SP03", name: "Áo Khoác Bomber Kaki Đen", stock: 0, price: 650000, category: "Áo khoác" },
-  ]);
-
-  const [revenueTotal, setRevenueTotal] = useState<number>(18550000);
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
+  const [revenueTotal, setRevenueTotal] = useState<number>(0);
   const [revenueList, setRevenueList] = useState<
     { label: string; amount: number }[]
-  >([
-    { label: "T2", amount: 2400000 },
-    { label: "T3", amount: 3800000 },
-    { label: "T4", amount: 1950000 },
-    { label: "T5", amount: 4500000 },
-    { label: "T6", amount: 5200000 },
-    { label: "T7", amount: 6800000 },
-    { label: "CN", amount: 3900000 },
-  ]);
+  >([]);
 
   // Hàm tải dữ liệu từ 3 API
   const fetchReportData = useCallback(async () => {
@@ -66,32 +53,47 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
       const ordersRes = await getOrdersCountByStatus().catch(() => null);
       if (ordersRes && typeof ordersRes === "object") {
         setOrdersStats(ordersRes);
+      } else {
+        setOrdersStats({
+          PENDING: 0,
+          PREPARING: 0,
+          SHIPPING: 0,
+          DELIVERED: 0,
+          CANCELLED: 0,
+        });
       }
 
       // 2. Lấy danh sách sản phẩm sắp hết hàng
       const lowStockRes = await getLowStock(threshold).catch(() => null);
       if (Array.isArray(lowStockRes)) {
         setLowStockProducts(lowStockRes);
+      } else {
+        setLowStockProducts([]);
       }
 
       // 3. Lấy báo cáo doanh thu
       const revenueRes = await getRevenue({ groupBy }).catch(() => null);
-      if (revenueRes) {
-        if (typeof revenueRes === "object" && revenueRes !== null) {
-          const resObj = revenueRes as Record<string, unknown>;
-          if (typeof resObj.total === "number") {
-            setRevenueTotal(resObj.total);
-          } else if (typeof resObj.totalRevenue === "number") {
-            setRevenueTotal(resObj.totalRevenue);
-          }
-          if (Array.isArray(resObj.data)) {
-            const parsed = resObj.data.map((item: Record<string, unknown>) => ({
-              label: String(item.date || item.period || item.label || ""),
-              amount: Number(item.revenue || item.total || item.amount || 0),
-            }));
-            if (parsed.length > 0) setRevenueList(parsed);
-          }
+      if (revenueRes && typeof revenueRes === "object" && revenueRes !== null) {
+        const resObj = revenueRes as Record<string, unknown>;
+        if (typeof resObj.total === "number") {
+          setRevenueTotal(resObj.total);
+        } else if (typeof resObj.totalRevenue === "number") {
+          setRevenueTotal(resObj.totalRevenue);
+        } else {
+          setRevenueTotal(0);
         }
+        if (Array.isArray(resObj.data)) {
+          const parsed = resObj.data.map((item: Record<string, unknown>) => ({
+            label: String(item.date || item.period || item.label || ""),
+            amount: Number(item.revenue || item.total || item.amount || 0),
+          }));
+          setRevenueList(parsed);
+        } else {
+          setRevenueList([]);
+        }
+      } else {
+        setRevenueTotal(0);
+        setRevenueList([]);
       }
     } finally {
       setLoading(false);
@@ -388,31 +390,37 @@ export default function ReportsOverview({ role }: ReportsOverviewProps) {
               </div>
 
               {/* Biểu đồ cột trực quan bằng CSS */}
-              <div className="h-44 flex items-end gap-2 pt-6 pb-2">
-                {revenueList.map((item, index) => {
-                  const heightPercent = Math.max(Math.round((item.amount / maxRevenue) * 100), 8);
-                  return (
-                    <div
-                      key={index}
-                      className="flex-1 flex flex-col items-center gap-2 h-full justify-end group"
-                    >
-                      {/* Tooltip hiển thị khi hover */}
-                      <span className="text-[10px] font-bold text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                        {(item.amount / 1000000).toFixed(1)}M
-                      </span>
-                      <div className="w-full bg-muted rounded-t-lg overflow-hidden flex items-end h-full">
-                        <div
-                          className="w-full bg-emerald-500/80 group-hover:bg-emerald-500 rounded-t-lg transition-all duration-300"
-                          style={{ height: `${heightPercent}%` }}
-                        />
+              {revenueList.length === 0 ? (
+                <div className="h-44 flex items-center justify-center text-xs text-muted-foreground">
+                  Chưa có số liệu doanh thu trong khoảng thời gian này.
+                </div>
+              ) : (
+                <div className="h-44 flex items-end gap-2 pt-6 pb-2">
+                  {revenueList.map((item, index) => {
+                    const heightPercent = Math.max(Math.round((item.amount / maxRevenue) * 100), 8);
+                    return (
+                      <div
+                        key={index}
+                        className="flex-1 flex flex-col items-center gap-2 h-full justify-end group"
+                      >
+                        {/* Tooltip hiển thị khi hover */}
+                        <span className="text-[10px] font-bold text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                          {(item.amount / 1000000).toFixed(1)}M
+                        </span>
+                        <div className="w-full bg-muted rounded-t-lg overflow-hidden flex items-end h-full">
+                          <div
+                            className="w-full bg-emerald-500/80 group-hover:bg-emerald-500 rounded-t-lg transition-all duration-300"
+                            style={{ height: `${heightPercent}%` }}
+                          />
+                        </div>
+                        <span className="text-[11px] font-semibold text-muted-foreground truncate w-full text-center">
+                          {item.label}
+                        </span>
                       </div>
-                      <span className="text-[11px] font-semibold text-muted-foreground truncate w-full text-center">
-                        {item.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="pt-3 border-t border-border/50 text-[11px] text-muted-foreground flex items-center justify-between">

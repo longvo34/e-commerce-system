@@ -24,13 +24,6 @@ import {
 } from "@/services/categories";
 import { CATEGORY_STATUS_MAP, STATUS_THEME, NOTIFICATION_THEME } from "@/constants";
 
-const MOCK_CATEGORIES: Category[] = [
-  { id: 1, categoryName: "Điện thoại & Tablet", status: "ACTIVE", productCount: 42 },
-  { id: 2, categoryName: "Laptop & Máy tính", status: "ACTIVE", productCount: 28 },
-  { id: 3, categoryName: "Phụ kiện công nghệ", status: "ACTIVE", productCount: 15 },
-  { id: 4, categoryName: "Đồng hồ thông minh", status: "INACTIVE", productCount: 0 },
-];
-
 export default function CategoriesManagementPanel() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,24 +60,15 @@ export default function CategoriesManagementPanel() {
       const data = await getCategories({
         status: statusFilter === "ALL" ? undefined : (statusFilter as CategoryStatus),
       });
-      if (Array.isArray(data) && data.length > 0) {
-        setCategories(data);
-      } else if (Array.isArray(data)) {
+      if (Array.isArray(data)) {
         setCategories(data);
       } else {
-        setCategories(MOCK_CATEGORIES);
+        setCategories([]);
       }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Không thể tải danh mục";
-      if (err?.response?.status === 403) {
-        showNotification(
-          "info",
-          "Tài khoản hiện tại không có quyền PRODUCT_STAFF để đồng bộ danh mục. Đang hiển thị dữ liệu mẫu để bạn thao tác thử nghiệm."
-        );
-      } else {
-        showNotification("error", msg);
-      }
-      setCategories(MOCK_CATEGORIES);
+      showNotification("error", msg);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
