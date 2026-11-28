@@ -53,7 +53,45 @@ export interface Order {
 
   [key: string]: unknown;
 }
+// Dữ liệu Customer Order đã xác nhận từ Backend
+export interface CustomerOrderProduct {
+  id: number;
+  productName: string;
+  imageUrl: string;
 
+  // Các trường bổ sung từ GET /orders/my/{id}
+  skuCode?: string;
+  price?: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CustomerOrderDetail {
+  id: number;
+  orderId: number;
+  productId: number;
+  quantity: number;
+  unitPrice: string;
+  product: CustomerOrderProduct;
+}
+
+export interface CustomerOrder {
+  id: number;
+  customerId: number;
+  shippingAddress: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  shippingFee: string;
+  discountAmount: string;
+  totalAmount: string;
+  status: OrderStatus;
+  cancelReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  orderDetail: CustomerOrderDetail;
+}
 // Tổng hợp nhiều đơn khi checkout
 export interface OrderCheckoutSummary {
   subtotal: number;
@@ -66,7 +104,7 @@ export interface OrderCheckoutSummary {
 export interface PlaceOrderResponse {
   message: string;
   orderCount: number;
-  orders: Order[];
+  orders: CustomerOrder[];
   summary: OrderCheckoutSummary;
 }
 

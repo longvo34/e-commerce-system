@@ -9,19 +9,14 @@ import {
   removeCartItem,
 } from "@/services/cart";
 
-interface CartItem {
-  id: number;
-  name?: string;
-  price?: number;
-  quantity: number;
-}
+import type { CartItem } from "@/types/cart";
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
-  //const [subtotal, setSubtotal] = useState(0);
+  const [subtotal, setSubtotal] = useState(0);
 
   const [clearing, setClearing] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -40,18 +35,8 @@ export default function CartPage() {
 
         if (cancelled) return;
 
-        //setSubtotal(data.subtotal);
-
-        if (data.items.length === 0) {
-          setCartItems([]);
-        } else {
-          // Chưa xác định cấu trúc CartItem khi có sản phẩm.
-          // Không tự ép kiểu dữ liệu backend.
-          setCartItems([]);
-          setError(
-            "Giỏ hàng có sản phẩm nhưng chưa xác định được cấu trúc CartItem.",
-          );
-        }
+        setSubtotal(data.subtotal);
+        setCartItems(data.items);
       } catch (err) {
         if (cancelled) return;
 
@@ -226,6 +211,9 @@ export default function CartPage() {
                       {/* Product Image Placeholder */}
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-muted border border-border/40 flex-shrink-0" />
                       <div>
+                        <p className="mb-2 text-sm font-semibold text-foreground">
+                          {item.product.productName}
+                        </p>
                         <button
                           type="button"
                           onClick={() => removeItem(item.id)}
@@ -237,9 +225,9 @@ export default function CartPage() {
                       </div>
                     </div>
 
-                    {/* Unit Price Column (placeholder) */}
+                    {/* Unit Price Column */}
                     <div className="hidden sm:block sm:col-span-2 text-center text-sm font-medium text-foreground">
-                      {/* Price can be rendered here */}
+                      {Number(item.product.price).toLocaleString("vi-VN")} ₫
                     </div>
 
                     {/* Quantity Stepper Column (+ 1 -) */}
@@ -277,7 +265,10 @@ export default function CartPage() {
 
                     {/* Total Price Column */}
                     <div className="col-span-3 sm:col-span-2 text-right text-sm font-medium text-foreground">
-                      {/* Total price can be rendered here */}
+                      {(
+                        Number(item.product.price) * item.quantity
+                      ).toLocaleString("vi-VN")}{" "}
+                      ₫
                     </div>
                   </div>
                 ))}
@@ -290,6 +281,9 @@ export default function CartPage() {
                 <h3 className="text-base sm:text-lg font-bold text-foreground">
                   Tạm tính
                 </h3>
+                <p className="mt-2 text-xl font-bold text-foreground">
+                  {subtotal.toLocaleString("vi-VN")} ₫
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Thuế và phí giao hàng được tính ở bước tiếp theo
                 </p>

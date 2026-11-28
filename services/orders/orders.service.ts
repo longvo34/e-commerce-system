@@ -6,6 +6,7 @@ import type {
   PaymentCallbackPayload,
   OrderStatus,
   StaffOrder,
+  CustomerOrder,
 } from "@/types/order";
 
 // 1. POST /orders - Đặt hàng từ giỏ hàng
@@ -18,15 +19,15 @@ export function placeOrder(
 // GET /orders/my - Danh sách đơn hàng của Customer
 // Backend xác nhận response là một mảng.
 // Schema từng phần tử chưa được kiểm chứng.
-export function getMyOrders(status?: OrderStatus): Promise<unknown[]> {
+export function getMyOrders(status?: OrderStatus): Promise<CustomerOrder[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
 
-  return api.get<unknown[]>(`/orders/my${query}`);
+  return api.get<CustomerOrder[]>(`/orders/my${query}`);
 }
 
 // 3. GET /orders/my/{id} - Chi tiết đơn hàng
-export function getMyOrderById(id: number): Promise<unknown> {
-  return api.get<unknown>(`/orders/my/${id}`);
+export function getMyOrderById(id: number): Promise<CustomerOrder> {
+  return api.get<CustomerOrder>(`/orders/my/${id}`);
 }
 
 // 4. POST /orders/{id}/cancel - Hủy đơn
@@ -76,7 +77,7 @@ export function getStaffOrderById(id: number | string): Promise<StaffOrder> {
  */
 export function updateOrderStatusByStaff(
   id: number | string,
-  status: OrderStatus
+  status: OrderStatus,
 ): Promise<StaffOrder> {
   return api.patch<StaffOrder>(`/orders/${id}/status`, { status });
 }
@@ -88,7 +89,7 @@ export function updateOrderStatusByStaff(
  */
 export function cancelOrderByStaff(
   id: number | string,
-  reason: string
+  reason: string,
 ): Promise<StaffOrder> {
   return api.post<StaffOrder>(`/orders/${id}/cancel-by-staff`, { reason });
 }
