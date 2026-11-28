@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { getProductById } from "@/services/products";
 import { getCategoryById } from "@/services/categories";
+import { addCartItem } from "@/services/cart";
 import type { Product, Category } from "@/types";
 
 function ProductDetailContent() {
@@ -17,7 +18,10 @@ function ProductDetailContent() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState("");
+  const [cartError, setCartError] = useState("");
+  const [addedToCart, setAddedToCart] = useState(false);
   useEffect(() => {
     let cancelled = false;
 
@@ -88,7 +92,43 @@ function ProductDetailContent() {
       cancelled = true;
     };
   }, [id]);
+  async function handleAddToCart() {
+    if (!product || addingToCart) return;
 
+    setCartError("");
+    setCartMessage("");
+    setAddedToCart(false);
+
+    if (product.status !== "ON_SALE") {
+      setCartError("Sản phẩm hiện không được bán.");
+      return;
+    }
+
+    if (product.stock != null && product.stock <= 0) {
+      setCartError("Sản phẩm đã hết hàng.");
+      return;
+    }
+
+    setAddingToCart(true);
+
+    try {
+      await addCartItem({
+        productId: product.id,
+        quantity: 1,
+      });
+
+      setAddedToCart(true);
+      setCartMessage("Đã thêm sản phẩm vào giỏ hàng.");
+    } catch (err) {
+      setCartError(
+        err instanceof Error
+          ? err.message
+          : "Không thể thêm sản phẩm vào giỏ hàng.",
+      );
+    } finally {
+      setAddingToCart(false);
+    }
+  }
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -198,10 +238,47 @@ function ProductDetailContent() {
               )}
             </div>
 
-            <p className="mt-5 text-sm text-muted-foreground">
-              Chức năng thêm vào giỏ hàng sẽ được kết nối khi có sản phẩm thực
-              tế để kiểm thử.
-            </p>
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={() => void handleAddToCart()}
+                disabled={
+                  addingToCart ||
+                  product.status !== "ON_SALE" ||
+                  (product.stock != null && product.stock <= 0)
+                }
+                className="w-full rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {addingToCart
+                  ? "Đang thêm..."
+                  : product.status !== "ON_SALE"
+                    ? "Sản phẩm ngừng bán"
+                    : product.stock != null && product.stock <= 0
+                      ? "Hết hàng"
+                      : "Thêm vào giỏ hàng"}
+              </button>
+
+              {cartError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {cartError}
+                </p>
+              )}
+
+              {cartMessage && (
+                <p role="status" className="text-sm text-foreground">
+                  {cartMessage}
+                </p>
+              )}
+
+              {addedToCart && (
+                <Link
+                  href="/cart"
+                  className="inline-block text-sm font-medium text-foreground underline underline-offset-4"
+                >
+                  Xem giỏ hàng
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 

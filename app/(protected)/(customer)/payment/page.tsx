@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { getCart } from "@/services/cart";
 import { placeOrder } from "@/services/orders";
+import type { CartResponse } from "@/types/cart";
+import { getShippingFee } from "@/services/settings";
 import type { PlaceOrderResponse } from "@/types/order";
 import { checkVoucher } from "@/services/vouchers";
 
@@ -41,11 +43,65 @@ export default function PaymentPage() {
   const [orderResult, setOrderResult] = useState<PlaceOrderResponse | null>(
     null,
   );
+  const [cart, setCart] = useState<CartResponse | null>(null);
+  const [shippingFee, setShippingFee] = useState<number | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState("");
   const shippingAddress = useSyncExternalStore(
     subscribeToCheckoutAddress,
     getCheckoutAddress,
     getServerCheckoutAddress,
   );
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCheckoutSummary() {
+      try {
+        const [cartData, shippingData] = await Promise.all([
+          getCart(),
+          getShippingFee(),
+        ]);
+
+        if (cancelled) return;
+
+        if (
+          !Array.isArray(cartData.items) ||
+          !Number.isFinite(cartData.subtotal) ||
+          !Number.isFinite(shippingData.shippingFee)
+        ) {
+          throw new Error("Dữ liệu tổng tiền không hợp lệ.");
+        }
+
+        setCart(cartData);
+        setShippingFee(shippingData.shippingFee);
+        setSummaryError("");
+      } catch (err) {
+        if (cancelled) return;
+
+        setSummaryError(
+          err instanceof Error
+            ? err.message
+            : "Không thể tải thông tin thanh toán.",
+        );
+      } finally {
+        if (!cancelled) {
+          setSummaryLoading(false);
+        }
+      }
+    }
+
+    void loadCheckoutSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const subtotal = cart?.subtotal ?? 0;
+  const estimatedTotal =
+    cart === null || cart.items.length === 0 || shippingFee === null
+      ? null
+      : subtotal + shippingFee;
 
   const handleCheckVoucher = async () => {
     const code = discountCode.trim();
@@ -231,7 +287,12 @@ export default function PaymentPage() {
                     Phương thức
                   </span>
                   <span className="text-xs sm:text-sm text-foreground truncate">
-                    Giao hàng tiêu chuẩn · Miễn phí
+                    Giao hàng tiêu chuẩn ·{" "}
+                    {summaryLoading
+                      ? "Đang tải phí..."
+                      : shippingFee === null
+                        ? "Chưa xác định phí"
+                        : `${shippingFee.toLocaleString("vi-VN")} ₫`}
                   </span>
                 </div>
                 <Link
@@ -447,24 +508,47 @@ export default function PaymentPage() {
                   {voucherMessage}
                 </p>
               )}
+              {summaryError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {summaryError}
+                </p>
+              )}
+
               <div className="space-y-3 pt-4 border-t border-border text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-foreground">Tạm tính</span>
-                  <span className="font-medium text-foreground"></span>
+                  <span className="font-medium text-foreground">
+                    {summaryLoading
+                      ? "Đang tải..."
+                      : cart
+                        ? `${subtotal.toLocaleString("vi-VN")} ₫`
+                        : "Chưa xác định"}
+                  </span>
                 </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-foreground">Giao hàng</span>
                   <span className="text-sm font-medium text-foreground">
-                    Miễn phí
+                    {summaryLoading
+                      ? "Đang tải..."
+                      : shippingFee === null
+                        ? "Chưa xác định"
+                        : `${shippingFee.toLocaleString("vi-VN")} ₫`}
                   </span>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-border flex items-center justify-between">
                 <span className="text-base font-bold text-foreground">
-                  Tổng cộng
+                  Tổng dự kiến
                 </span>
-                <span className="text-base font-bold text-foreground"></span>
+                <span className="text-base font-bold text-foreground">
+                  {summaryLoading
+                    ? "Đang tải..."
+                    : estimatedTotal === null
+                      ? "Chưa xác định"
+                      : `${estimatedTotal.toLocaleString("vi-VN")} ₫`}
+                </span>
               </div>
             </div>
           </div>

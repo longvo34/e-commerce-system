@@ -3,6 +3,10 @@
 import { useMemo, useState, useEffect } from "react";
 import { Package, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { getMyOrders } from "@/services/orders";
+import type {
+  CustomerOrder,
+  OrderStatus as BackendOrderStatus,
+} from "@/types/order";
 
 type OrderStatus =
   | "Pending"
@@ -58,6 +62,36 @@ const currency = (value: number) =>
     style: "currency",
     currency: "VND",
   }).format(value);
+const backendStatusMap: Record<BackendOrderStatus, OrderStatus> = {
+  PENDING: "Pending",
+  PREPARING: "Preparing",
+  SHIPPING: "Shipping",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled",
+};
+
+function mapCustomerOrder(order: CustomerOrder): Order {
+  return {
+    id: String(order.id),
+    createdAt: new Date(order.createdAt).toLocaleString("vi-VN"),
+    status: backendStatusMap[order.status],
+    shippingAddress: order.shippingAddress,
+    paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    shippingFee: Number(order.shippingFee),
+    discountAmount: Number(order.discountAmount),
+    totalAmount: Number(order.totalAmount),
+    cancelReason: order.cancelReason ?? undefined,
+    items: [
+      {
+        id: order.orderDetail.id,
+        name: order.orderDetail.product.productName,
+        quantity: order.orderDetail.quantity,
+        unitPrice: Number(order.orderDetail.unitPrice),
+      },
+    ],
+  };
+}
 
 export default function OrderHistoryPage() {
   const [search, setSearch] = useState("");
@@ -83,16 +117,8 @@ export default function OrderHistoryPage() {
           return;
         }
 
-        if (data.length > 0) {
-          // Chưa có schema Order thực tế.
-          // Không ép unknown[] thành Order[].
-          setError(
-            "Đã nhận được đơn hàng, nhưng cần xác nhận cấu trúc dữ liệu từ backend.",
-          );
-          return;
-        }
-
-        setOrders([]);
+        setOrders(data.map(mapCustomerOrder));
+        setError("");
       } catch (err) {
         if (cancelled) return;
 
