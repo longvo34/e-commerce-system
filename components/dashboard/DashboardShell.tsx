@@ -9,6 +9,7 @@ import InventoryManagementPanel from "./InventoryManagementPanel";
 import StaffManagementPanel from "./StaffManagementPanel";
 import OrdersProcessingPanel from "./OrdersProcessingPanel";
 import VouchersManagementPanel from "./VouchersManagementPanel";
+import ShippingConfigPanel from "./ShippingConfigPanel";
 import { STATUS_THEME } from "@/constants";
 import {
   LayoutDashboard,
@@ -317,65 +318,7 @@ export default function DashboardShell({
 
 
 
-// =========================================================================
-// 8. CẤU HÌNH PHÍ VẬN CHUYỂN (Admin only)
-// =========================================================================
-function ShippingConfigPanel() {
-  const [standardFee, setStandardFee] = useState("");
-  const [freeShipThreshold, setFreeShipThreshold] = useState("");
 
-  const handleSave = () => {
-    alert("Chức năng chưa có.");
-  };
-
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h3 className="font-bold text-base text-foreground">
-          Cấu hình biểu phí vận chuyển (Admin)
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Thiết lập phí giao hàng áp dụng cho giỏ hàng theo khu vực và chính sách miễn phí ship.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
-        <div>
-          <label className="text-xs font-semibold text-foreground block mb-1.5">
-            Phí giao hàng tiêu chuẩn mặc định
-          </label>
-          <input
-            type="text"
-            value={standardFee}
-            onChange={(e) => setStandardFee(e.target.value)}
-            placeholder="Chưa cấu hình (Ví dụ: 30000)"
-            className="w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm text-foreground focus:ring-1 focus:ring-ring"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-foreground block mb-1.5">
-            Ngưỡng đơn hàng được MIỄN PHÍ VẬN CHUYỂN (Freeship threshold)
-          </label>
-          <input
-            type="text"
-            value={freeShipThreshold}
-            onChange={(e) => setFreeShipThreshold(e.target.value)}
-            placeholder="Chưa cấu hình (Ví dụ: 500000)"
-            className="w-full rounded-lg border border-input bg-background px-3.5 py-2 text-sm text-foreground focus:ring-1 focus:ring-ring"
-          />
-        </div>
-
-        <button
-          onClick={handleSave}
-          className="rounded-xl bg-primary text-primary-foreground px-6 py-2.5 text-xs font-semibold hover:bg-primary/90"
-        >
-          Lưu cấu hình
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // 9. KIỂM DUYỆT ĐÁNH GIÁ (Admin only)
